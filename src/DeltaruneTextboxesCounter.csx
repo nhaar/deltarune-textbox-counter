@@ -92,7 +92,12 @@ string AddLine (string line)
     if (is_undefined(line))
     {{
         line = """";
-        show_debug_message(""undefined line"" + global.msg[obj_writer.msgno])
+        show_debug_message(""undefined line"" + global.msg[obj_writer.msgno]);
+    }}
+    else if (is_real(line))
+    {{
+        line = """";
+        show_debug_message(""line not set"" + global.msg[obj_writer.msgno]);
     }}
     var file = file_text_open_append(""textstuff/text.txt"");
     var add = true;
