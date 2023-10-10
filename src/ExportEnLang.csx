@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Collections.Concurrent;
+using System.Text.Encodings.Web;
 
 // TO-DO: Ensure DELTARUNE DEMO 1&2 is loaded as well
 EnsureDataLoaded();
@@ -65,11 +66,11 @@ await StopProgressBarUpdater();
 
 string jsonString = JsonSerializer.Serialize(langEN, new JsonSerializerOptions
 {
-    WriteIndented = true
+    WriteIndented = true,
+    Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
 });
 
 // TO-DO: Make this path configurable?
-// TO-DO: Unescape unicode
 File.WriteAllText(FilePath + "/../lang/lang_en.json", jsonString);
 
 var unused = new List<string>();
@@ -183,7 +184,7 @@ void SearchInCode (UndertaleCode code)
                 if (langString != "")
                 {
                     possibleCodeCount[i]--;
-                    langEN[textCode] = langString;
+                    langEN[textCode] = Regex.Unescape(langString);
                 }
             }
         }
