@@ -1,0 +1,5 @@
+# useful keeping the deltarune folder in the same directory as the project
+# this way you can edit the code and run it at the same time
+# but then you have to ignore it
+/src/*
+!/src/*.csx
