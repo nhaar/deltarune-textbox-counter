@@ -114,8 +114,8 @@ string AddLine (string line)
         global.read_text[global.read_total] = line;
         global.read_total++;
         file_text_write_string(file, line + ""\n"");
-        file_text_close(file);
     }}
+    file_text_close(file);
     ";
 }
 
