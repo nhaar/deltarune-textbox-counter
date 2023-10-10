@@ -311,5 +311,88 @@ void UseDebug ()
     Append("gml_Object_obj_writer_Draw_0", code);
 }
 
+List<UndertaleCode> codeList = new List<UndertaleCode>();
+foreach (UndertaleCode code in Data.Code)
+{
+    // for now only ch2 specific code is being searched
+    // don't know why parent entry needs to be null but that is how it is in ExportAllCode.csx
+    if (code.ParentEntry == null && !code.Name.Content.Contains("ch1"))
+        codeList.Add(code);
+}
 
-UseDebug(); 
+SetProgressBar(null, "Code Entries", 0, codeList.Count);
+StartProgressBarUpdater();
+
+// single-threaded approach for now: multi-threated showed some issues
+foreach (UndertaleCode code in codeList)
+{
+    await Task.Run(() => ReplaceGlobalMessages(code));
+}
+
+
+await StopProgressBarUpdater();
+
+
+/// <summary>
+/// Add braces to every if, else if and else statement to make it safe for replacing
+/// </summary>
+/// <param name="code"></param>
+/// <returns></returns>
+string AddSafeBraces (string code)
+{
+    Regex ifRegex = new Regex(@"^[^\S\n]*(?:else )?if\s.*\n\s*[^{\s].*$", RegexOptions.Multiline);
+    Regex elseRegex = new Regex(@"^.*else\n\s*[^{\s].*$", RegexOptions.Multiline);
+    var safeIf = ifRegex.Replace(code, (match) =>
+    {
+        var value = match.Value;
+        var condition = Regex.Match(value, @"(?<=if\s).*").Value;
+        bool isElse = value.Contains("else if");
+        var isElseString = isElse ? "else " : "";
+        var statement = Regex.Match(value, @"(?<=\)\n\s*).*").Value;
+        return @$"
+        {isElseString} if ({condition})
+        {{
+        {statement}
+        }}
+        ";
+    });
+
+    return elseRegex.Replace(safeIf, (match) =>
+    {
+        var value = match.Value;
+        var statement = Regex.Match(value, @"(?<=else\n\s*).*").Value;
+        return @$"
+        else
+        {{
+        {statement}
+        }}
+        ";
+    });
+}
+
+/// <summary>
+/// Replace the <c>global.msg[] = stringsetloc()</c> statements with <c>global.msg_id[] = ""</c> in all files
+/// </summary>
+/// <param name="code"></param>
+void ReplaceGlobalMessages (UndertaleCode code)
+{
+    var content = Decompiler.Decompile(code, DECOMPILE_CONTEXT.Value);
+
+    Regex regex = new Regex(@"^.*global\.msg\[\d+\] = stringsetloc\(.*\).*$", RegexOptions.Multiline);
+    if (regex.IsMatch(content))
+    {
+        var replaced = regex.Replace(AddSafeBraces(content), (match) =>
+        {
+            var value = match.Value;
+            var messageIndex = Regex.Match(value, @"(?<=global\.msg\[)\d+(?=\])").Value;
+            var textId = Regex.Match(value, @"(?<=stringsetloc\(.*?"")[\d\w]*(?=""\))").Value;
+            return @$"
+            {value}
+            global.msg_id[{messageIndex}] = ""{textId}"";
+            ";
+        });
+
+        Replace(code.Name.Content, content, replaced);
+    }
+    IncrementProgressParallel();
+}
