@@ -1,6 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
+using System.Linq;
 
 EnsureDataLoaded();
 
@@ -404,23 +405,125 @@ string AddSafeBraces (string code)
 void ReplaceGlobalMessages (UndertaleCode code)
 {
     var content = Decompiler.Decompile(code, DECOMPILE_CONTEXT.Value);
+    var replaced = "";
 
-    Regex regex = new Regex(@"^.*global\.msg\[\d+\] = stringsetloc\(.*\).*$", RegexOptions.Multiline);
-    if (regex.IsMatch(content))
+    var handlers = new ParallelAssignmentHandler[]
     {
-        var replaced = regex.Replace(AddSafeBraces(content), (match) =>
+        new ParallelAssignmentHandler("global.msg", StringsetFunctions.Stringsetloc, 1)
+    };
+    foreach (ParallelAssignmentHandler handler in handlers)
+    {
+        if (handler.IsMatch(content))
         {
-            var value = match.Value;
-            var messageIndex = Regex.Match(value, @"(?<=global\.msg\[)\d+(?=\])").Value;
-            var textId = Regex.Match(value, @"(?<=stringsetloc\(.*?"")[\d\w]*(?=""\))").Value;
-            return @$"
-            {value}
-            global.msg_id[{messageIndex}] = ""{textId}"";
-            ";
-        });
+            if (replaced == "")
+                replaced = AddSafeBraces(content);
 
-        oldCode[code.Name.Content] = content;
-        newCode[code.Name.Content] = replaced;
+   
+            replaced = handler.AssignmentPattern().Replace(replaced, match => handler.GetParallelAssignment(match.Value));
+        }
     }
+
     IncrementProgressParallel();
+    if (replaced == "")
+        return;
+    oldCode[code.Name.Content] = content;
+    newCode[code.Name.Content] = replaced;
+}
+
+/// <summary>
+/// Class to handle the parallel assignment of a variable to a function call
+/// </summary>
+class ParallelAssignmentHandler
+{
+    /// <summary>
+    /// The name of the variable that is being assigned
+    /// </summary>
+    public string VariableName { get; set; }
+
+    /// <summary>
+    /// The pattern to match the variable name in the code
+    /// </summary>
+    public string VariablePattern { get; set; }
+
+    /// <summary>
+    /// The name of the function that is being called
+    /// </summary>
+    public string FunctionName { get; set; }
+
+    /// <summary>
+    /// The dimension of the array that is being assigned, should be 0 if it is not an array
+    /// </summary>
+    public int ArrayDimension { get; set; }
+
+    /// <summary>
+    /// Get the new assignment "parallel" (below) to the old assignment
+    /// </summary>
+    /// <param name="originalAssignment"></param>
+    /// <returns></returns>
+    public string GetParallelAssignment (string originalAssignment)
+    {
+        var arrayIndexPattern = @$"(?<={VariablePattern}(\[[\w\d]+\])*\[)[\w\d]+(?=\])";
+        var arrayIndexes = Regex.Matches(originalAssignment, arrayIndexPattern).Cast<Match>().Select(match => match.Value).ToArray();
+        var parallelVariable = $"{VariableName}_id";
+        foreach (string arrayIndex in arrayIndexes)
+        {
+            parallelVariable += $"[{arrayIndex}]";
+        }
+        var textId = Regex.Match(originalAssignment, @$"(?<={FunctionName}\(.*?"")[\d\w]*(?=""\))").Value;
+
+        return @$"
+        {originalAssignment}
+        {parallelVariable} = ""{textId}"";
+        ";
+    }
+
+    /// <summary>
+    /// Get a pattern that matches an assignment compatible to the type of parallel assignment that this class handles
+    /// </summary>
+    /// <returns></returns>
+    public Regex AssignmentPattern ()
+    {
+        return new Regex(@$"^\s*{VariablePattern}(\[[\w\d]+\]){{{ArrayDimension}}} = {FunctionName}\(.*$", RegexOptions.Multiline);
+    }
+
+    /// <summary>
+    /// Check if the code contains an assignment compatible to the type of parallel assignment that this class handles
+    /// </summary>
+    /// <param name="assignment"></param>
+    /// <returns></returns>
+    public bool IsMatch (string assignment)
+    {
+        return AssignmentPattern().IsMatch(assignment);
+    }
+
+    /// <summary>
+    /// Build instance specifying all the assignments that it can handle
+    /// </summary>
+    /// <param name="variableName"></param>
+    /// <param name="functionName"></param>
+    /// <param name="arrayDimension"></param>
+    public ParallelAssignmentHandler (string variableName, StringsetFunctions functionName, int arrayDimension = 0)
+    {
+        VariableName = variableName;
+        VariablePattern = variableName.Replace(".", @"\.");
+        switch (functionName)
+        {
+            case StringsetFunctions.Stringsetloc:
+                FunctionName = "stringsetloc";
+                break;
+            case StringsetFunctions.Stringsetsubloc:
+                FunctionName = "stringsetsubloc";
+                break;
+        }
+        ArrayDimension = arrayDimension;
+    }
+}
+
+/// <summary>
+/// Enumerating the functions that need to be handled manually
+/// </summary>
+enum StringsetFunctions
+{
+    Stringsetloc,
+    Stringsetsubloc
 }
