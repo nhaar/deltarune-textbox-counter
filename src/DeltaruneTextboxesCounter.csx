@@ -1,4 +1,6 @@
 using System.Threading;
+using System.Threading.Tasks;
+using System.Collections.Concurrent;
 
 EnsureDataLoaded();
 
@@ -320,18 +322,40 @@ foreach (UndertaleCode code in Data.Code)
         codeList.Add(code);
 }
 
-SetProgressBar(null, "Code Entries", 0, codeList.Count);
+// first going to see which ones will be replaced
+// this done can be done in parallel to speed up the process
+SetProgressBar(null, "Code Entry Formatting", 0, codeList.Count);
 StartProgressBarUpdater();
 
-// single-threaded approach for now: multi-threated showed some issues
-foreach (UndertaleCode code in codeList)
-{
-    await Task.Run(() => ReplaceGlobalMessages(code));
-}
+var oldCode = new ConcurrentDictionary<string, string>();
+var newCode = new ConcurrentDictionary<string, string>();
 
+await ReplaceGlobalMessages();
+await StopProgressBarUpdater();
+
+// now this one can't be done in parallel since it will lead to issues
+SetProgressBar(null, "Code Entry Replacing", 0, newCode.Keys.Count);
+StartProgressBarUpdater();
+
+foreach (string codeEntry in newCode.Keys)
+{
+    await Task.Run(() => 
+    {
+        Replace(codeEntry, oldCode[codeEntry], newCode[codeEntry]);
+        IncrementProgressParallel();
+    });
+}
 
 await StopProgressBarUpdater();
 
+/// <summary>
+/// Wrapper for <c>ReplaceGlobalMessages</c> to be used in <c>Parallel.ForEach</c>
+/// </summary>
+/// <returns></returns>
+async Task ReplaceGlobalMessages ()
+{
+    await Task.Run(() => Parallel.ForEach(codeList, ReplaceGlobalMessages));
+}
 
 /// <summary>
 /// Add braces to every if, else if and else statement to make it safe for replacing
@@ -371,7 +395,8 @@ string AddSafeBraces (string code)
 }
 
 /// <summary>
-/// Replace the <c>global.msg[] = stringsetloc()</c> statements with <c>global.msg_id[] = ""</c> in all files
+/// Replace the <c>global.msg[] = stringsetloc()</c> statements with <c>global.msg_id[] = ""</c> in all code entries
+/// and save the old and new code in the <c>oldCode</c> and <c>newCode</c> dictionaries
 /// </summary>
 /// <param name="code"></param>
 void ReplaceGlobalMessages (UndertaleCode code)
@@ -392,7 +417,8 @@ void ReplaceGlobalMessages (UndertaleCode code)
             ";
         });
 
-        Replace(code.Name.Content, content, replaced);
+        oldCode[code.Name.Content] = content;
+        newCode[code.Name.Content] = replaced;
     }
     IncrementProgressParallel();
 }
