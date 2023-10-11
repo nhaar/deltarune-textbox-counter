@@ -466,6 +466,13 @@ void MainReplace (UndertaleCode code)
     string replaced = AddSafeBraces(content);
     bool changed = false;
 
+    if (codeName == "gml_GlobalScript_scr_armorinfo")
+    {
+        changed = true;
+        var armornametempPattern = new StringsetlocPattern("armornametemp");
+        replaced = armornametempPattern.Replace(replaced);
+    }
+
     var globalMsgPattern = new StringsetlocPattern("global.msg", 1);
     if (globalMsgPattern.IsMatch(content))
     {
