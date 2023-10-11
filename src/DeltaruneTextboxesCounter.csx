@@ -308,10 +308,6 @@ foreach (UndertaleCode code in toUpdate)
 
 UseDebug();
 
-/// <summary>
-/// Wrapper for <c>ReplaceGlobalMessages</c> to be used in <c>Parallel.ForEach</c>
-/// </summary>
-/// <returns></returns>
 async Task MainReplace ()
 {
     await Task.Run(() => Parallel.ForEach(codeList, MainReplace));
