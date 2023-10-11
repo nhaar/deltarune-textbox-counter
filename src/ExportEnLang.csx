@@ -85,7 +85,6 @@ var unused = new List<string>();
     File.WriteAllLines(Path.Combine(langFolder, "deprecated.txt"), unused);
 }
 
-
 ScriptMessage("Chapter 2 text fully exported!");
 
 /// <summary>
