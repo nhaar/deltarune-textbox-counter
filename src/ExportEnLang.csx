@@ -21,7 +21,7 @@ var langFolder = Path.Combine(Path.GetDirectoryName(FilePath), "lang");
 Dictionary<string, string> GetLangJP ()
 {
     ReadOnlySpan<byte> fileBytes = File.ReadAllBytes(Path.Combine(langFolder, "lang_ja.json"));
-    var reader = new Utf8JsonReader(new ReadOnlySpan<byte>(fileBytes));
+    var reader = new Utf8JsonReader(fileBytes);
     var langJP = new Dictionary<string, string>();
 
     // save last one because of the forward reading
