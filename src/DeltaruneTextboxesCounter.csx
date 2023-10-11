@@ -433,14 +433,50 @@ void AddLineAppend (string codeName, string drawLine, string drawVariable)
 }
 
 AddParallelInitialization("gml_GlobalScript_scr_fusion_queue", "fusionIngredientName1[fusioncount] = \"--\"");
+AddParallelInitialization("gml_GlobalScript_scr_fusion_queue", "fusionIngredientName2[fusioncount] = \"--\"");
 
+// text displaying name of result of fusion
+AddParallelInitialization("gml_GlobalScript_scr_fusion_queue", "fusionResultName[fusioncount] = \"--\"");
+
+// getting the fusion names for an armor
 AddParallelExchange("gml_GlobalScript_scr_fusion_queue", "fusionIngredientName1[fusioncount] = armornametemp");
+AddParallelExchange("gml_GlobalScript_scr_fusion_queue", "fusionIngredientName2[fusioncount] = armornametemp");
+AddParallelExchange("gml_GlobalScript_scr_fusion_queue", "fusionResultName[fusioncount] = armornametemp");
 
+// name of succesfully fused item
+AddParallelInitialization("gml_Object_obj_npc_hammerguy_Create_0", "fusionResultName = \"ITEM\"");
+
+// I believe this is passed from all items that get fused?
+AddParallelExchange("gml_Object_obj_fusionmenu_Step_0", "obj_npc_hammerguy.fusionResultName = fusionResultName[menuCoord[0]]");
+
+AddLineAppend("gml_Object_obj_npc_hammerguy_Step_0", "msgsetsubloc(0, \"* (You got ~1!)/%\", fusionResultName, \"obj_npc_hammerguy_slash_Step_0_gml_251_0\")", "fusionResultName");
+
+// not super sure exactly what these are but they seem to be very general,
 AddParallelInitialization("gml_Object_obj_custommenu_Create_0", "optionCommentA[i][j] = \" \"");
+AddParallelInitialization("gml_Object_obj_custommenu_Create_0", "optionCommentB[i][j] = \" \"");
+AddParallelInitialization("gml_Object_obj_custommenu_Create_0", "optionText[i][j] = \"---\"");
+
+// believe it is just to display name of fused items but eactly how I am unsure
+AddParallelInitialization("gml_Object_obj_fusionmenu_Step_0", "optionText[1][j] = \" \"");
+AddParallelInitialization("gml_Object_obj_fusionmenu_Step_0", "optionText[_n][j] = \" \"");
 
 AddParallelExchange("gml_Object_obj_fusionmenu_Step_0", "optionCommentA[0][j] = fusionIngredientName1[j]");
 
+AddParallelExchange("gml_Object_obj_fusionmenu_Step_0", "optionCommentB[0][j] = fusionIngredientName2[j]");
+
+AddParallelExchange("gml_Object_obj_fusionmenu_Step_0", "optionText[0][j] = fusionResultName[j]");
+
 AddLineAppend("gml_Object_obj_custommenu_Draw_0", "draw_text_transformed((textx + optionCommentAXOffset[m][j]), (texty + optionCommentAYOffset[m][j]), string(optionCommentA[m][j]), textxscale, textyscale, 0)", "optionCommentA[m][j]");
+
+AddLineAppend("gml_Object_obj_custommenu_Draw_0", "draw_text_transformed((textx + optionCommentBXOffset[m][j]), (texty + optionCommentBYOffset[m][j]), string(optionCommentB[m][j]), textxscale, textyscale, 0)", "optionCommentB[m][j]");
+
+AddLineAppend("gml_Object_obj_custommenu_Draw_0", "draw_text_transformed(textx, texty, string_hash_to_newline(optionText[m][j]), textxscale, textyscale, 0)", "optionText[m][j]");
+
+AddParallelExchange("gml_GlobalScript_scr_armorinfo", "armorname[i] = armornametemp");
+
+AddParallelExchange("gml_GlobalScript_scr_shopmenu", "_itempname = armorname[i]");
+
+AddLineAppend("gml_GlobalScript_scr_shopmenu", "draw_text(60, (260 + (j * 40)), string_hash_to_newline(_itempname))", "_itempname");
 
 class StringsetlocCall
 {
