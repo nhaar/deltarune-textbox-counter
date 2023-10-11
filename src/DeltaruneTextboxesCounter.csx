@@ -436,6 +436,16 @@ void AddLineAppend (string codeName, string drawLine, string drawVariable)
     Place(codeName, drawLine, appendCode);
 }
 
+AddParallelInitialization("gml_GlobalScript_scr_fusion_queue", "fusionIngredientName1[fusioncount] = \"--\"");
+
+AddParallelExchange("gml_GlobalScript_scr_fusion_queue", "fusionIngredientName1[fusioncount] = armornametemp");
+
+AddParallelInitialization("gml_Object_obj_custommenu_Create_0", "optionCommentA[i][j] = \" \"");
+
+AddParallelExchange("gml_Object_obj_fusionmenu_Step_0", "optionCommentA[0][j] = fusionIngredientName1[j]");
+
+AddLineAppend("gml_Object_obj_custommenu_Draw_0", "draw_text_transformed((textx + optionCommentAXOffset[m][j]), (texty + optionCommentAYOffset[m][j]), string(optionCommentA[m][j]), textxscale, textyscale, 0)", "optionCommentA[m][j]");
+
 class StringsetlocCall
 {
     public string Call;
