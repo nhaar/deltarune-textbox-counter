@@ -420,7 +420,7 @@ UseDebug();
 
 async Task MainReplace ()
 {
-    await Task.Run(() => Parallel.ForEach(codeList, MainReplace));
+    await Parallel.ForEachAsync(codeList, async (code, cancellationToken) => MainReplace(code));
 }
 
 /// <summary>
