@@ -14,7 +14,7 @@ function append_text_line (argument0, argument1)
     }
     var file = file_text_open_append("textstuff/text.txt");
     var add = true;
-    show_debug_message("line: " + string(line));
+    show_debug_message("line: " + string(line) + " " + string(content));
     for (var i = 0; i < global.read_total; i++)
     {
         if (global.read_text[i] == line)
