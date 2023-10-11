@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Collections.Concurrent;
+using System.Collections.Specialized;
 using System.Text.Encodings.Web;
 
 // TO-DO: Ensure DELTARUNE DEMO 1&2 is loaded as well
@@ -40,12 +41,7 @@ var langJP = GetLangJP();
 var langEN = new ConcurrentDictionary<string, string>();
 
 // just to order the language back to the original order
-var output = new Dictionary<string, string>();
-
-List<UndertaleCode> allCode = new();
-
-foreach (UndertaleCode code in Data.Code)
-{
+var output = new OrderedDictionary();
     // code entries with ch1 are the ones that are going to be present in the chapter 1 lang file
     // although there ARE chapter 1 strings in the chapter 2 lang file, they are not used
     // don't know why ParentEntry needs to be null, but that's how it was in the ExportAllCode.csx script
