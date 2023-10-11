@@ -293,7 +293,7 @@ StartProgressBarUpdater();
 var newCode = new ConcurrentDictionary<string, string>();
 var toUpdate = new List<UndertaleCode>();
 
-await ReplaceGlobalMessages();
+await MainReplace();
 await StopProgressBarUpdater();
 
 int i = 0;
@@ -312,9 +312,9 @@ UseDebug();
 /// Wrapper for <c>ReplaceGlobalMessages</c> to be used in <c>Parallel.ForEach</c>
 /// </summary>
 /// <returns></returns>
-async Task ReplaceGlobalMessages ()
+async Task MainReplace ()
 {
-    await Task.Run(() => Parallel.ForEach(codeList, ReplaceGlobalMessages));
+    await Task.Run(() => Parallel.ForEach(codeList, MainReplace));
 }
 
 /// <summary>
@@ -352,32 +352,130 @@ string AddSafeBraces (string code)
         }}
         ";
     });
+}   
+
+class Assignment
+{
+    public string LeftSide;
+
+    public string RightSide;
+
+    public Assignment (string assignmentString)
+    {
+        var assignment = assignmentString.Split('=');
+        LeftSide = assignment[0].Trim();
+        RightSide = assignment[1].Trim();
+    }
+
+    public Assignment (string leftSide, string rightSide)
+    {
+        LeftSide = leftSide;
+        RightSide = rightSide;
+    }
+
+    public override string ToString ()
+    {
+        return $"{LeftSide} = {RightSide}";
+    }
 }
 
-/// <summary>
-/// Replace the <c>global.msg[] = stringsetloc()</c> statements with <c>global.msg_id[] = ""</c> in all code entries
-/// and save the old and new code in the <c>oldCode</c> and <c>newCode</c> dictionaries
-/// </summary>
-/// <param name="code"></param>
-void ReplaceGlobalMessages (UndertaleCode code)
+class AssignmentVariable
 {
-    var content = Decompiler.Decompile(code, DECOMPILE_CONTEXT.Value);
+    public string Name;
 
-    Regex regex = new Regex(@"^.*global\.msg\[\d+\] = stringsetloc\(.*\).*$", RegexOptions.Multiline);
-    if (regex.IsMatch(content))
+    public string Brackets;
+
+    public AssignmentVariable (string variableString)
     {
-        var replaced = regex.Replace(AddSafeBraces(content), (match) =>
+        if (variableString.Contains("["))
         {
-            var value = match.Value;
-            var messageIndex = Regex.Match(value, @"(?<=global\.msg\[)\d+(?=\])").Value;
-            var textId = Regex.Match(value, @"(?<=stringsetloc\(.*?"")[\d\w]*(?=""\))").Value;
-            return @$"
-            {value}
-            global.msg_id[{messageIndex}] = ""{textId}"";
-            ";
-        });
+            Name = Regex.Match(variableString, @"[\w\d_\.]+(?=\[)").Value;
+            Brackets = variableString.Replace(Name, "");
+        }
+        else
+        {
+            Name = variableString;
+            Brackets = "";
+        }
+    }
 
-        newCode[code.Name.Content] = replaced;
+    public override string ToString ()
+    {
+        return $"{Name}{Brackets}";
+    }
+}
+
+class StringsetlocCall
+{
+    public string Call;
+
+    public string TextId;
+
+    public StringsetlocCall (string call)
+    {
+        Call = call;
+        TextId = Regex.Match(call, @"(?<=stringsetloc\(.*?"")[\d\w]*(?=""\))").Value;
+    }
+}
+
+class StringsetlocPattern
+{
+    public string VariableName;
+
+    public int ArrayDimension;
+
+    public Regex Pattern;
+
+    public StringsetlocPattern (string variableName, int arrayDimension = 0)
+    {
+        VariableName = variableName;
+        var namePattern = VariableName.Replace(".", @"\.");
+        ArrayDimension = arrayDimension;
+        Pattern = new Regex(@$"^\s*{namePattern}\[[\w\d_\.]+\]{{{ArrayDimension}}}\s=\sstringsetloc\(.*?\)\s*$", RegexOptions.Multiline);
+    }
+
+    public bool IsMatch (string input)
+    {
+        return Pattern.IsMatch(input);
+    }
+
+    public string Replace (string input)
+    {
+        return Pattern.Replace(input, (match) => DestructureStringset(match.Value));
+    }
+
+    public string DestructureStringset (string assignmentLine)
+    {
+        Console.WriteLine("Im morbing so hard rn");
+        Console.WriteLine(assignmentLine);
+        var assignment = new Assignment(assignmentLine);
+        var leftSide = new AssignmentVariable(assignment.LeftSide);
+        var rightSide = new StringsetlocCall(assignment.RightSide);
+        var newLeftSide = new AssignmentVariable($"{leftSide.Name}_id{leftSide.Brackets}");
+        return $@"
+        {assignmentLine}
+        {new Assignment(newLeftSide.ToString(), $"\"{rightSide.TextId}\"")}
+        ";
+    }
+}
+
+void MainReplace (UndertaleCode code)
+{
+    var codeName = code.Name.Content;
+    var content = Decompiler.Decompile(code, DECOMPILE_CONTEXT.Value);
+    string replaced = AddSafeBraces(content);
+    bool changed = false;
+
+    var globalMsgPattern = new StringsetlocPattern("global.msg", 1);
+    if (globalMsgPattern.IsMatch(content))
+    {
+        changed = true;
+        replaced = globalMsgPattern.Replace(replaced);
+    }
+
+    if (changed)
+    {
+        newCode[codeName] = replaced;
         toUpdate.Add(code);
     }
     IncrementProgressParallel();
