@@ -189,7 +189,11 @@ void SearchInCode (UndertaleCode code)
                         {
                             if (s.Contains(textCode))
                             {
+
                                 langString = GetFirstArgument(s);
+                                // the legendary one pipis textbox that has a pagebreak (bug)
+                                if (textCode == "obj_pipis_enemy_slash_Step_0_gml_97_0")
+                                    langString = langString.Replace("\f", "");
                                 break;
                             }
                         }
