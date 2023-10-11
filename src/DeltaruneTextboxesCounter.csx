@@ -329,14 +329,15 @@ StartProgressBarUpdater();
 
 var oldCode = new ConcurrentDictionary<string, string>();
 var newCode = new ConcurrentDictionary<string, string>();
+var toUpdate = new List<UndertaleCode>();
 
 await ReplaceGlobalMessages();
 await StopProgressBarUpdater();
 
 // now this one can't be done in parallel since it will lead to issues
-foreach (string codeEntry in newCode.Keys)
+foreach (UndertaleCode code in toUpdate)
 {
-    Replace(codeEntry, oldCode[codeEntry], newCode[codeEntry]);
+    code.ReplaceGML(newCode[code.Name.Content], Data);
 }
 
 UseDebug();
@@ -412,6 +413,7 @@ void ReplaceGlobalMessages (UndertaleCode code)
 
         oldCode[code.Name.Content] = content;
         newCode[code.Name.Content] = replaced;
+        toUpdate.Add(code);
     }
     IncrementProgressParallel();
 }
