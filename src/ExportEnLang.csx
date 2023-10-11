@@ -11,6 +11,8 @@ EnsureDataLoaded();
 // needed for decompiling the code entries
 ThreadLocal<GlobalDecompileContext> DECOMPILE_CONTEXT = new ThreadLocal<GlobalDecompileContext>(() => new GlobalDecompileContext(Data, false));
 
+var langFolder = Path.Combine(Path.GetDirectoryName(FilePath), "lang");
+
 /// <summary>
 /// Load the JSON for the Japanese language file as a dictionary
 /// </summary>
@@ -18,7 +20,7 @@ ThreadLocal<GlobalDecompileContext> DECOMPILE_CONTEXT = new ThreadLocal<GlobalDe
 // for some reason, the read only spans and utf8jsonreader only will work inside a function and not in the global scope
 Dictionary<string, string> GetLangJP ()
 {
-    byte[] fileBytes = File.ReadAllBytes(FilePath + "/../lang/lang_ja.json");
+    ReadOnlySpan<byte> fileBytes = File.ReadAllBytes(Path.Combine(langFolder, "lang_ja.json"));
     var reader = new Utf8JsonReader(new ReadOnlySpan<byte>(fileBytes));
     var langJP = new Dictionary<string, string>();
 
@@ -81,8 +83,7 @@ string jsonString = JsonSerializer.Serialize(output, new JsonSerializerOptions
     Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
 });
 
-// TO-DO: Make this path configurable?
-File.WriteAllText(FilePath + "/../lang/lang_en.json", jsonString);
+File.WriteAllText(Path.Combine(langFolder, "lang_en.json"), jsonString);
 
 var unused = new List<string>();
 
@@ -95,8 +96,7 @@ foreach (string textCode in langJP.Keys)
 }
 
 // TO-DO: Make this path configurable?
-// TO-DO: "unused" might be a bad name for this file, since doesn't contain all unused strings, just a few
-File.WriteAllLines(FilePath + "/../lang/unused.txt", unused);
+    File.WriteAllLines(Path.Combine(langFolder, "unused.txt"), unused);
 
 /// <summary>
 /// Get the number of possible text codes in a line of GML code
