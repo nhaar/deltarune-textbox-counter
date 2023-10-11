@@ -132,7 +132,7 @@ void SearchInCode (UndertaleCode code)
     var codeLines = codeContent.Split("\n").ToArray();
 
     // keeping track of the possible so that we will know when we can skip a line for certain
-    var possibleCodeCount = codeLines.Select(line => GetPossibleTextCodes(line)).ToArray();
+    var possibleCodeCount = codeLines.Select(GetPossibleTextCodes).ToArray();
 
     for (int i = 0; i < codeLines.Length; i++)
     {
