@@ -45,11 +45,9 @@ var output = new OrderedDictionary();
     // code entries with ch1 are the ones that are going to be present in the chapter 1 lang file
     // although there ARE chapter 1 strings in the chapter 2 lang file, they are not used
     // don't know why ParentEntry needs to be null, but that's how it was in the ExportAllCode.csx script
-    if (!code.Name.Content.Contains("ch1") && code.ParentEntry == null)
-        allCode.Add(code);
-}
+List<UndertaleCode> ch2Code = Data.Code.Where(code => !code.Name.Content.Contains("ch1") && code.ParentEntry == null).ToList();
 
-SetProgressBar(null, "Code Entries", 0, allCode.Count);
+SetProgressBar(null, "Code Entries", 0, ch2Code.Count);
 StartProgressBarUpdater();
 await SearchInCode(allCode);
 await StopProgressBarUpdater();
@@ -105,7 +103,7 @@ int GetPossibleTextCodes (string line)
 /// <returns></returns>
 async Task SearchInCode (List<UndertaleCode> allCode)
 {
-    await Task.Run(() => Parallel.ForEach(allCode, SearchInCode));
+    await Task.Run(() => Parallel.ForEach(ch2Code, SearchInCode));
 }
 
 /// <summary>
