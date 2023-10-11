@@ -82,7 +82,6 @@ var unused = new List<string>();
     }
 }
 
-// TO-DO: Make this path configurable?
     File.WriteAllLines(Path.Combine(langFolder, "deprecated.txt"), unused);
 }
 
