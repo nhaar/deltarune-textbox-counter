@@ -69,6 +69,8 @@ string jsonString = JsonSerializer.Serialize(output, new JsonSerializerOptions
 
 File.WriteAllText(Path.Combine(langFolder, "lang_en.json"), jsonString);
 
+if (ScriptQuestion("Would you like to export the deprecated keys?"))
+{
 var unused = new List<string>();
 
     foreach (string textCode in langJP)
@@ -80,7 +82,9 @@ var unused = new List<string>();
 }
 
 // TO-DO: Make this path configurable?
-    File.WriteAllLines(Path.Combine(langFolder, "unused.txt"), unused);
+    File.WriteAllLines(Path.Combine(langFolder, "deprecated.txt"), unused);
+}
+
 
 ScriptMessage("Chapter 2 text fully exported!");
 
