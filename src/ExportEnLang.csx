@@ -118,8 +118,7 @@ async Task SearchInCode (List<UndertaleCode> allCode)
 /// </remarks>
 string GetFirstArgument (string functionCall)
 {
-    var pattern = @$"(?<=^\([^""]*"")(\\""|[^""])*(?="")";
-    return Regex.Match(functionCall, pattern).Value;
+    return Regex.Match(functionCall, @"(?<=^\([^""]*"")(\\""|[^""])*(?="")").Value;
 }
 
 /// <summary>
