@@ -100,9 +100,8 @@ int GetPossibleTextCodes (string line)
 /// <summary>
 /// Task wrapper for <c>SearchInCode</c>
 /// </summary>
-/// <param name="allCode"></param>
 /// <returns></returns>
-async Task SearchInCode (List<UndertaleCode> allCode)
+async Task SearchInCode ()
 {
     await Task.Run(() => Parallel.ForEach(ch2Code, SearchInCode));
 }
