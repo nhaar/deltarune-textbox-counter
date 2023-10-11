@@ -82,6 +82,8 @@ var unused = new List<string>();
 // TO-DO: Make this path configurable?
     File.WriteAllLines(Path.Combine(langFolder, "unused.txt"), unused);
 
+ScriptMessage("Chapter 2 text fully exported!");
+
 /// <summary>
 /// Get the number of possible text codes in a line of GML code
 /// 
