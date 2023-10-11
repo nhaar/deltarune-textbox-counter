@@ -405,6 +405,37 @@ class AssignmentVariable
     }
 }
 
+void AddParallelInitialization (string codeName, string originalLine)
+{
+    var assignment = new Assignment(originalLine);
+    var leftSide = new AssignmentVariable(assignment.LeftSide);
+    Place(codeName, originalLine, @$"
+    {leftSide.Name}_id{leftSide.Brackets} = 0;
+    ");
+}
+
+void AddParallelExchange (string codeName, string originalLine)
+{
+    var assignment = new Assignment(originalLine);
+    var leftSide = new AssignmentVariable(assignment.LeftSide);
+    var rightSide = new AssignmentVariable(assignment.RightSide);
+    var exchange = @$"
+    {leftSide.Name}_id{leftSide.Brackets} = {rightSide.Name}_id{rightSide.Brackets};
+    ";
+
+    Place(codeName, originalLine, @$"
+    {exchange}
+    ");
+}
+
+void AddLineAppend (string codeName, string drawLine, string drawVariable)
+{
+    var originalVariable = new AssignmentVariable(drawVariable);
+    var newVariable = new AssignmentVariable($"{originalVariable.Name}_id{originalVariable.Brackets}");
+    var appendCode = $"append_text_line({newVariable}, {originalVariable})";
+    Place(codeName, drawLine, appendCode);
+}
+
 class StringsetlocCall
 {
     public string Call;
