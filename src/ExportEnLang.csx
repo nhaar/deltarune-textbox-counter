@@ -14,35 +14,24 @@ ThreadLocal<GlobalDecompileContext> DECOMPILE_CONTEXT = new ThreadLocal<GlobalDe
 var langFolder = Path.Combine(Path.GetDirectoryName(FilePath), "lang");
 
 /// <summary>
-/// Load the JSON for the Japanese language file as a dictionary
+/// Load the JSON for the Japanese language file as a dictionary and extract the keys
 /// </summary>
 /// <returns></returns>
 // for some reason, the read only spans and utf8jsonreader only will work inside a function and not in the global scope
-Dictionary<string, string> GetLangJP ()
+List<string> GetLangJP()
 {
     ReadOnlySpan<byte> fileBytes = File.ReadAllBytes(Path.Combine(langFolder, "lang_ja.json"));
     var reader = new Utf8JsonReader(fileBytes);
-    var langJP = new Dictionary<string, string>();
+    List<string> langJP = new();
 
-    // save last one because of the forward reading
-    var lastProperty = "";
     while (reader.Read())
     {
-        switch (reader.TokenType)
-        {
-            case JsonTokenType.PropertyName:
+        // only need the keys
+        if (reader.TokenType == JsonTokenType.PropertyName)
             {
-                lastProperty = reader.GetString();
-                break;
-            }
-            case JsonTokenType.String:
-            {
-                langJP[lastProperty] = reader.GetString();
-                break;
-            }
+            langJP.Add(reader.GetString());
         }
     }
-
     return langJP;
 }
 
@@ -69,7 +58,7 @@ StartProgressBarUpdater();
 await SearchInCode(allCode);
 await StopProgressBarUpdater();
 
-foreach (string textCode in langJP.Keys)
+foreach (string textCode in langJP)
 {
     if (langEN.ContainsKey(textCode))
     {
@@ -87,7 +76,7 @@ File.WriteAllText(Path.Combine(langFolder, "lang_en.json"), jsonString);
 
 var unused = new List<string>();
 
-foreach (string textCode in langJP.Keys)
+    foreach (string textCode in langJP)
 {
     if (!langEN.ContainsKey(textCode))
     {
@@ -153,7 +142,7 @@ void SearchInCode (UndertaleCode code)
     for (int i = 0; i < codeLines.Length; i++)
     {
         var line = codeLines[i];
-        foreach (string textCode in langJP.Keys)
+        foreach (string textCode in langJP)
         {
             // do it in this loop since it will be decremented in here
             if (possibleCodeCount[i] == 0)
