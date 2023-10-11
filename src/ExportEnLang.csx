@@ -49,8 +49,9 @@ List<UndertaleCode> ch2Code = Data.Code.Where(code => !code.Name.Content.Contain
 
 SetProgressBar(null, "Code Entries", 0, ch2Code.Count);
 StartProgressBarUpdater();
-await SearchInCode(allCode);
-await StopProgressBarUpdater();
+
+// the legendary one pipis textbox that has a pagebreak (bug)
+langEN["obj_pipis_enemy_slash_Step_0_gml_97_0"] = langEN["obj_pipis_enemy_slash_Step_0_gml_97_0"].TrimStart('\f');
 
 foreach (string textCode in langJP)
 {
@@ -172,11 +173,7 @@ void SearchInCode (UndertaleCode code)
                         {
                             if (s.Contains(textCode))
                             {
-
                                 langString = GetFirstArgument(s);
-                                // the legendary one pipis textbox that has a pagebreak (bug)
-                                if (textCode == "obj_pipis_enemy_slash_Step_0_gml_97_0")
-                                    langString = langString.Replace("\f", "");
                                 break;
                             }
                         }
