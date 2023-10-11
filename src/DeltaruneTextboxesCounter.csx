@@ -468,7 +468,8 @@ class StringsetlocPattern
         VariableName = variableName;
         var namePattern = VariableName.Replace(".", @"\.");
         ArrayDimension = arrayDimension;
-        Pattern = new Regex(@$"^\s*{namePattern}\[[\w\d_\.]+\]{{{ArrayDimension}}}\s=\sstringsetloc\(.*?\)\s*$", RegexOptions.Multiline);
+        var bracketPattern = ArrayDimension > 0 ? @$"\[[\w\d_\.]+\]{{{ArrayDimension}}}" : "";
+        Pattern = new Regex(@$"^\s*{namePattern}{bracketPattern}\s=\sstringsetloc\(.*?\)\s*$", RegexOptions.Multiline);
     }
 
     public bool IsMatch (string input)
