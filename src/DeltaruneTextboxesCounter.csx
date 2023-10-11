@@ -483,8 +483,6 @@ class StringsetlocPattern
 
     public string DestructureStringset (string assignmentLine)
     {
-        Console.WriteLine("Im morbing so hard rn");
-        Console.WriteLine(assignmentLine);
         var assignment = new Assignment(assignmentLine);
         var leftSide = new AssignmentVariable(assignment.LeftSide);
         var rightSide = new StringsetlocCall(assignment.RightSide);
