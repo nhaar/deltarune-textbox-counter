@@ -334,19 +334,10 @@ await ReplaceGlobalMessages();
 await StopProgressBarUpdater();
 
 // now this one can't be done in parallel since it will lead to issues
-SetProgressBar(null, "Code Entry Replacing", 0, newCode.Keys.Count);
-StartProgressBarUpdater();
-
 foreach (string codeEntry in newCode.Keys)
 {
-    await Task.Run(() => 
-    {
-        Replace(codeEntry, oldCode[codeEntry], newCode[codeEntry]);
-        IncrementProgressParallel();
-    });
+    Replace(codeEntry, oldCode[codeEntry], newCode[codeEntry]);
 }
-
-await StopProgressBarUpdater();
 
 UseDebug();
 
