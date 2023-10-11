@@ -82,50 +82,13 @@ else
 }}
 ");
 
-/// <summary>
-/// Generate GML code that adds a line to the textbox tracker
-/// </summary>
-/// <param name="line"></param>
-/// <returns></returns>
-string AddLine (string line)
-{
-    return @$"
-    var line = {line};
-    if (is_undefined(line))
-    {{
-        line = """";
-        show_debug_message(""undefined line"" + global.msg[obj_writer.msgno]);
-    }}
-    else if (is_real(line))
-    {{
-        line = """";
-        show_debug_message(""line not set"" + global.msg[obj_writer.msgno]);
-    }}
-    var file = file_text_open_append(""textstuff/text.txt"");
-    var add = true;
-    for (var i = 0; i < global.read_total; i++)
-    {{
-        if (global.read_text[i] == line)
-        {{
-            add = false;
-            break;
-        }}
-    }}
-    if (add)
-    {{
-        global.read_text[global.read_total] = line;
-        global.read_total++;
-        file_text_write_string(file, line + ""\n"");
-    }}
-    file_text_close(file);
-    ";
-}
+ImportGMLFile(ScriptPath + "/../append_text_line.gml");
 
 // always add when it is created
-Append("gml_Object_obj_writer_Create_0", AddLine("global.msg_id[0]"));
+Append("gml_Object_obj_writer_Create_0", "append_text_line(global.msg_id[0], global.msg[0]);");
 
 // adding it when next message is called
-Place("gml_GlobalScript_scr_nextmsg", "mystring = nstring[msgno]", AddLine("global.msg_id[msgno]"));
+Place("gml_GlobalScript_scr_nextmsg", "mystring = nstring[msgno]", "append_text_line(global.msg_id[msgno], global.msg[msgno]);");
 
 // modifying functions to automatically track the text id
 Replace("gml_GlobalScript_msgset", @"function msgset(argument0, argument1) //gml_Script_msgset
