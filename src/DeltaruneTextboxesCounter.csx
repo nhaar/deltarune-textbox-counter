@@ -334,9 +334,13 @@ var toUpdate = new List<UndertaleCode>();
 await ReplaceGlobalMessages();
 await StopProgressBarUpdater();
 
+int i = 0;
+int total = toUpdate.Count;
 // now this one can't be done in parallel since it will lead to issues
 foreach (UndertaleCode code in toUpdate)
 {
+    Console.WriteLine($"Replacing {code.Name.Content} ({i}/{total})");
+    i++;
     code.ReplaceGML(newCode[code.Name.Content], Data);
 }
 
