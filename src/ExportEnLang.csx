@@ -29,7 +29,7 @@ List<string> GetLangJP()
     {
         // only need the keys
         if (reader.TokenType == JsonTokenType.PropertyName)
-            {
+        {
             langJP.Add(reader.GetString());
         }
     }
@@ -42,9 +42,9 @@ var langEN = new ConcurrentDictionary<string, string>();
 
 // just to order the language back to the original order
 var output = new OrderedDictionary();
-    // code entries with ch1 are the ones that are going to be present in the chapter 1 lang file
-    // although there ARE chapter 1 strings in the chapter 2 lang file, they are not used
-    // don't know why ParentEntry needs to be null, but that's how it was in the ExportAllCode.csx script
+// code entries with ch1 are the ones that are going to be present in the chapter 1 lang file
+// although there ARE chapter 1 strings in the chapter 2 lang file, they are not used
+// don't know why ParentEntry needs to be null, but that's how it was in the ExportAllCode.csx script
 List<UndertaleCode> ch2Code = Data.Code.Where(code => !code.Name.Content.Contains("ch1") && code.ParentEntry == null).ToList();
 
 SetProgressBar(null, "Extracting Text", 0, ch2Code.Count);
@@ -72,15 +72,15 @@ File.WriteAllText(Path.Combine(langFolder, "lang_en.json"), jsonString);
 
 if (ScriptQuestion("Would you like to export the deprecated keys?"))
 {
-var unused = new List<string>();
+    var unused = new List<string>();
 
     foreach (string textCode in langJP)
-{
-    if (!langEN.ContainsKey(textCode))
     {
-        unused.Add(textCode);
+        if (!langEN.ContainsKey(textCode))
+        {
+            unused.Add(textCode);
+        }
     }
-}
 
     File.WriteAllLines(Path.Combine(langFolder, "deprecated.txt"), unused);
 }
