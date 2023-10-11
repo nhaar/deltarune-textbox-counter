@@ -327,7 +327,6 @@ foreach (UndertaleCode code in Data.Code)
 SetProgressBar(null, "Code Entry Formatting", 0, codeList.Count);
 StartProgressBarUpdater();
 
-var oldCode = new ConcurrentDictionary<string, string>();
 var newCode = new ConcurrentDictionary<string, string>();
 var toUpdate = new List<UndertaleCode>();
 
@@ -415,7 +414,6 @@ void ReplaceGlobalMessages (UndertaleCode code)
             ";
         });
 
-        oldCode[code.Name.Content] = content;
         newCode[code.Name.Content] = replaced;
         toUpdate.Add(code);
     }
