@@ -48,6 +48,9 @@ var langJP = GetLangJP();
 
 var langEN = new ConcurrentDictionary<string, string>();
 
+// just to order the language back to the original order
+var output = new Dictionary<string, string>();
+
 List<UndertaleCode> allCode = new();
 
 foreach (UndertaleCode code in Data.Code)
@@ -64,7 +67,15 @@ StartProgressBarUpdater();
 await SearchInCode(allCode);
 await StopProgressBarUpdater();
 
-string jsonString = JsonSerializer.Serialize(langEN, new JsonSerializerOptions
+foreach (string textCode in langJP.Keys)
+{
+    if (langEN.ContainsKey(textCode))
+    {
+        output[textCode] = langEN[textCode];
+    }
+}
+
+string jsonString = JsonSerializer.Serialize(output, new JsonSerializerOptions
 {
     WriteIndented = true,
     Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
@@ -115,16 +126,15 @@ async Task SearchInCode (List<UndertaleCode> allCode)
 /// <summary>
 /// Get the first STRING argument of a function call
 /// </summary>
-/// <param name="functionName"></param>
 /// <param name="functionCall"></param>
 /// <returns></returns>
 /// <remarks>
 /// This function is used to get the language string from a function call, which is always
 /// the first string argument of the function
 /// </remarks>
-string GetFirstArgument (string functionName, string functionCall)
+string GetFirstArgument (string functionCall)
 {
-    var pattern = @$"(?<={functionName}\([^""]*"").*?[^\\](?="")";
+    var pattern = @$"(?<=^\([^""]*"")(\\""|[^""])*(?="")";
     return Regex.Match(functionCall, pattern).Value;
 }
 
@@ -156,7 +166,7 @@ void SearchInCode (UndertaleCode code)
             }
             if (line.Contains($"\"{textCode}\""))
             {
-                var langString = "";
+                string langString = null;
                 var functions = new[]
                 {
                     "msgnextloc",
@@ -171,17 +181,25 @@ void SearchInCode (UndertaleCode code)
 
                 for (int j = 0; j < functions.Length; j++)
                 {
-                    Match match = Regex.Match(line, @$"(?<=[^\w]|){functions[j]}\(.*?""{textCode}""\)");
+                    Match match = Regex.Match(line, @$"\b{functions[j]}\(.*?""{textCode}""\)");
                     if (match.Success)
                     {
-                        langString = GetFirstArgument(functions[j], match.Value);
+                        var split = match.Value.Split(functions[j]);
+                        foreach (string s in split)
+                        {
+                            if (s.Contains(textCode))
+                            {
+                                langString = GetFirstArgument(s);
+                                break;
+                            }
+                        }
                         break;
                     }
                 }
 
-                // if the language string is empty, it means that we couldn't find the function call
+                // if the language string is null, it means that we couldn't find the function call
                 // so the it was not an actual text code, but a variable or something else
-                if (langString != "")
+                if (langString != null)
                 {
                     possibleCodeCount[i]--;
                     langEN[textCode] = Regex.Unescape(langString);
