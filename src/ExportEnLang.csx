@@ -103,7 +103,8 @@ int GetPossibleTextCodes (string line)
 /// <returns></returns>
 async Task SearchInCode ()
 {
-    await Task.Run(() => Parallel.ForEach(ch2Code, SearchInCode));
+    // much faster than await async => Parallel.ForEach
+    await Parallel.ForEachAsync(ch2Code, async (code, cancellationToken) => SearchInCode(code));
 }
 
 /// <summary>
