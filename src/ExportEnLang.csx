@@ -47,7 +47,7 @@ var output = new OrderedDictionary();
     // don't know why ParentEntry needs to be null, but that's how it was in the ExportAllCode.csx script
 List<UndertaleCode> ch2Code = Data.Code.Where(code => !code.Name.Content.Contains("ch1") && code.ParentEntry == null).ToList();
 
-SetProgressBar(null, "Code Entries", 0, ch2Code.Count);
+SetProgressBar(null, "Extracting Text", 0, ch2Code.Count);
 StartProgressBarUpdater();
 await SearchInCode();
 
