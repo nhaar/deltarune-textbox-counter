@@ -1,6 +1,116 @@
 using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
+using System.Xml;
+
+static class Global
+{
+    public static ConcurrentDictionary<string, List<ParallelAction>> ParallelFiles = new ConcurrentDictionary<string, List<ParallelAction>>();
+}
+
+using (XmlReader reader = XmlReader.Create(ScriptPath + "/../parallel.xml"))
+{
+    var currentFile = "";
+    while (reader.Read())
+    {
+        if (reader.NodeType == XmlNodeType.Element && reader.Name == "file")
+        {
+            do
+            {
+                if (reader.NodeType == XmlNodeType.Element)
+                {
+                    switch (reader.Name)
+                    {
+                        case "name":
+                        {
+                            reader.Read();
+                            currentFile = reader.Value;
+                            Console.WriteLine(currentFile);
+                            Global.ParallelFiles[currentFile] = new List<ParallelAction>();
+                            break;
+                        }
+                        case "destructure":
+                        {
+                            var thisVariable = "";
+                            var thisDimension = "0";
+                            do
+                            {
+                                if (reader.NodeType == XmlNodeType.Element)
+                                {
+                                    switch (reader.Name)
+                                    {
+                                        case "variable":
+                                        {
+                                            reader.Read();
+                                            thisVariable = reader.Value;
+                                            break;
+                                        }
+                                        case "dim":
+                                        {
+                                            reader.Read();
+                                            thisDimension = reader.Value;
+                                            break;
+                                        }
+                                    }
+                                }
+                                reader.Read();
+                            }
+                            while (reader.Name != "destructure");
+                            Global.ParallelFiles[currentFile].Add(new ParallelAction(thisVariable, ParallelActionType.Destructure, thisDimension));
+                            break;
+                        }
+                        case "init":
+                        {
+                            reader.Read();
+                            var line = reader.Value;
+                            Global.ParallelFiles[currentFile].Add(new ParallelAction(line, ParallelActionType.Initialization));
+                            break;
+                        }
+                        case "exchange":
+                        {
+                            reader.Read();
+                            var line = reader.Value;
+                            Global.ParallelFiles[currentFile].Add(new ParallelAction(line, ParallelActionType.Exchange));
+                            break;
+                        }
+                        case "draw":
+                        {
+                            var thisLine = "";
+                            var thisVariable = "";
+                            do
+                            {
+                                if (reader.NodeType == XmlNodeType.Element)
+                                {
+                                    switch (reader.Name)
+                                    {
+                                        case "line":
+                                        {
+                                            reader.Read();
+                                            thisLine = reader.Value;
+                                            break;
+                                        }
+                                        case "variable":
+                                        {
+                                            reader.Read();
+                                            thisVariable = reader.Value;
+                                            break;
+                                        }
+                                    }
+                                }
+                                reader.Read();
+                            }
+                            while (reader.Name != "draw");
+                            Global.ParallelFiles[currentFile].Add(new ParallelAction(thisLine, ParallelActionType.Append, thisVariable));
+                            break;
+                        }
+                    }
+                }
+                reader.Read();
+            }
+            while (reader.Name != "file");
+        }
+    }
+}
 
 EnsureDataLoaded();
 
@@ -401,16 +511,22 @@ class AssignmentVariable
     }
 }
 
-void AddParallelInitialization (string codeName, string originalLine)
+string PlaceInString (string str, string line, string placement)
+{
+    return str.Replace(line, $"{line}\n{placement}");
+}
+
+string AddParallelInitialization (string content, string originalLine)
 {
     var assignment = new Assignment(originalLine);
     var leftSide = new AssignmentVariable(assignment.LeftSide);
-    Place(codeName, originalLine, @$"
+    return PlaceInString(content, originalLine, @$"
     {leftSide.Name}_id{leftSide.Brackets} = 0;
     ");
 }
 
-void AddParallelExchange (string codeName, string originalLine)
+
+string AddParallelExchange (string content, string originalLine)
 {
     var assignment = new Assignment(originalLine);
     var leftSide = new AssignmentVariable(assignment.LeftSide);
@@ -419,64 +535,40 @@ void AddParallelExchange (string codeName, string originalLine)
     {leftSide.Name}_id{leftSide.Brackets} = {rightSide.Name}_id{rightSide.Brackets};
     ";
 
-    Place(codeName, originalLine, @$"
-    {exchange}
-    ");
+    return PlaceInString(content, originalLine, exchange);
 }
 
-void AddLineAppend (string codeName, string drawLine, string drawVariable)
+string AddLineAppend (string content, string drawLine, string drawVariable)
 {
     var originalVariable = new AssignmentVariable(drawVariable);
     var newVariable = new AssignmentVariable($"{originalVariable.Name}_id{originalVariable.Brackets}");
     var appendCode = $"append_text_line({newVariable}, {originalVariable})";
-    Place(codeName, drawLine, appendCode);
+    return PlaceInString(content, drawLine, appendCode);
 }
 
-AddParallelInitialization("gml_GlobalScript_scr_fusion_queue", "fusionIngredientName1[fusioncount] = \"--\"");
-AddParallelInitialization("gml_GlobalScript_scr_fusion_queue", "fusionIngredientName2[fusioncount] = \"--\"");
+enum ParallelActionType
+{
+    Initialization,
+    Exchange,
+    Append,
+    Destructure
+}
 
-// text displaying name of result of fusion
-AddParallelInitialization("gml_GlobalScript_scr_fusion_queue", "fusionResultName[fusioncount] = \"--\"");
+struct ParallelAction
+{
+    public string Arg1;
 
-// getting the fusion names for an armor
-AddParallelExchange("gml_GlobalScript_scr_fusion_queue", "fusionIngredientName1[fusioncount] = armornametemp");
-AddParallelExchange("gml_GlobalScript_scr_fusion_queue", "fusionIngredientName2[fusioncount] = armornametemp");
-AddParallelExchange("gml_GlobalScript_scr_fusion_queue", "fusionResultName[fusioncount] = armornametemp");
+    public string Arg2;
 
-// name of succesfully fused item
-AddParallelInitialization("gml_Object_obj_npc_hammerguy_Create_0", "fusionResultName = \"ITEM\"");
+    public ParallelActionType Type;
 
-// I believe this is passed from all items that get fused?
-AddParallelExchange("gml_Object_obj_fusionmenu_Step_0", "obj_npc_hammerguy.fusionResultName = fusionResultName[menuCoord[0]]");
-
-AddLineAppend("gml_Object_obj_npc_hammerguy_Step_0", "msgsetsubloc(0, \"* (You got ~1!)/%\", fusionResultName, \"obj_npc_hammerguy_slash_Step_0_gml_251_0\")", "fusionResultName");
-
-// not super sure exactly what these are but they seem to be very general,
-AddParallelInitialization("gml_Object_obj_custommenu_Create_0", "optionCommentA[i][j] = \" \"");
-AddParallelInitialization("gml_Object_obj_custommenu_Create_0", "optionCommentB[i][j] = \" \"");
-AddParallelInitialization("gml_Object_obj_custommenu_Create_0", "optionText[i][j] = \"---\"");
-
-// believe it is just to display name of fused items but eactly how I am unsure
-AddParallelInitialization("gml_Object_obj_fusionmenu_Step_0", "optionText[1][j] = \" \"");
-AddParallelInitialization("gml_Object_obj_fusionmenu_Step_0", "optionText[_n][j] = \" \"");
-
-AddParallelExchange("gml_Object_obj_fusionmenu_Step_0", "optionCommentA[0][j] = fusionIngredientName1[j]");
-
-AddParallelExchange("gml_Object_obj_fusionmenu_Step_0", "optionCommentB[0][j] = fusionIngredientName2[j]");
-
-AddParallelExchange("gml_Object_obj_fusionmenu_Step_0", "optionText[0][j] = fusionResultName[j]");
-
-AddLineAppend("gml_Object_obj_custommenu_Draw_0", "draw_text_transformed((textx + optionCommentAXOffset[m][j]), (texty + optionCommentAYOffset[m][j]), string(optionCommentA[m][j]), textxscale, textyscale, 0)", "optionCommentA[m][j]");
-
-AddLineAppend("gml_Object_obj_custommenu_Draw_0", "draw_text_transformed((textx + optionCommentBXOffset[m][j]), (texty + optionCommentBYOffset[m][j]), string(optionCommentB[m][j]), textxscale, textyscale, 0)", "optionCommentB[m][j]");
-
-AddLineAppend("gml_Object_obj_custommenu_Draw_0", "draw_text_transformed(textx, texty, string_hash_to_newline(optionText[m][j]), textxscale, textyscale, 0)", "optionText[m][j]");
-
-AddParallelExchange("gml_GlobalScript_scr_armorinfo", "armorname[i] = armornametemp");
-
-AddParallelExchange("gml_GlobalScript_scr_shopmenu", "_itempname = armorname[i]");
-
-AddLineAppend("gml_GlobalScript_scr_shopmenu", "draw_text(60, (260 + (j * 40)), string_hash_to_newline(_itempname))", "_itempname");
+    public ParallelAction (string arg1, ParallelActionType type, string arg2 = "")
+    {
+        Arg1 = arg1;
+        Arg2 = arg2;
+        Type = type;
+    }
+}
 
 class StringsetlocCall
 {
@@ -538,18 +630,53 @@ void MainReplace (UndertaleCode code)
     string replaced = AddSafeBraces(content);
     bool changed = false;
 
-    if (codeName == "gml_GlobalScript_scr_armorinfo")
+    void processAction (ParallelAction action)
     {
-        changed = true;
-        var armornametempPattern = new StringsetlocPattern("armornametemp");
-        replaced = armornametempPattern.Replace(replaced);
+        switch (action.Type)
+        {
+            case ParallelActionType.Initialization:
+            {
+                changed = true;
+                replaced = AddParallelInitialization(replaced, action.Arg1);
+                break;
+            }
+            case ParallelActionType.Exchange:
+            {
+                changed = true;
+                replaced = AddParallelExchange(replaced, action.Arg1);
+                break;
+            }
+            case ParallelActionType.Append:
+            {
+                changed = true;
+                replaced = AddLineAppend(replaced, action.Arg1, action.Arg2);
+                break;
+            }
+            case ParallelActionType.Destructure:
+            {
+                var pattern = new StringsetlocPattern(action.Arg1, Int32.Parse(action.Arg2));
+                if (pattern.IsMatch(replaced))
+                {
+                    changed = true;
+                    replaced = pattern.Replace(replaced);
+                }
+                break;
+            }
+        }
     }
 
-    var globalMsgPattern = new StringsetlocPattern("global.msg", 1);
-    if (globalMsgPattern.IsMatch(content))
+    if (Global.ParallelFiles.ContainsKey(codeName))
     {
-        changed = true;
-        replaced = globalMsgPattern.Replace(replaced);
+        var parallelActions = Global.ParallelFiles[codeName];
+        foreach (ParallelAction action in parallelActions)
+        {
+            processAction(action);
+        }
+    }
+
+    foreach (ParallelAction action in Global.ParallelFiles["global"])
+    {
+        processAction(action);       
     }
 
     if (changed)
