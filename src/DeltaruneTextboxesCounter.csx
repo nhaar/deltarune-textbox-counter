@@ -773,7 +773,7 @@ string AddArrayArgument (string content, string functionLine, string arrayName)
 string ReplaceArrayArgument (string content, string functionLine, string arrayName)
 {
     var textId = Regex.Match(functionLine, @"(?<=,\s)""[\w\d_\.]+""(?=\))").Value;
-    var lastArgument = new Regex(@", ""([\\""]|[^""])*""\)");
+    var lastArgument = new Regex(@", ""[\w\d_\.]+""\)");
     var newFunctionLine = lastArgument.Replace(functionLine, $", {arrayName}_id)");
     var replaceString = @$"
     {arrayName}_id[0] = {textId};
