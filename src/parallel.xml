@@ -95,4 +95,11 @@
             <left-index>1</left-index>
         </assignment>
     </file>
+    <file>
+        <name>gml_GlobalScript_scr_text</name>
+        <add-msg>
+            <line>msgnext(itemgetstring)</line>
+            <variable>itemgetstring</variable>
+        </add-msg>
+    </file>
 </files>

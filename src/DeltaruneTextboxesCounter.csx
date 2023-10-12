@@ -154,6 +154,36 @@ using (XmlReader reader = XmlReader.Create(ScriptPath + "/../parallel.xml"))
                             Global.ParallelFiles[currentFile].Add(new ParallelAction(thisLine, ParallelActionType.Assignment, thisLeft, thisRight, thisLeftIndex, thisRightIndex));
                             break;
                         }
+                        case "add-msg":
+                        {
+                            var thisLine = "";
+                            var thisVariable = "";
+                            do
+                            {
+                                if (reader.NodeType == XmlNodeType.Element)
+                                {
+                                    switch (reader.Name)
+                                    {
+                                        case "line":
+                                        {
+                                            reader.Read();
+                                            thisLine = reader.Value;
+                                            break;
+                                        }
+                                        case "variable":
+                                        {
+                                            reader.Read();
+                                            thisVariable = reader.Value;
+                                            break;
+                                        }
+                                    }
+                                }
+                                reader.Read();
+                            }
+                            while (reader.Name != "add-msg");
+                            Global.ParallelFiles[currentFile].Add(new ParallelAction(thisLine, ParallelActionType.AddMessage, thisVariable));
+                            break;
+                        }
                     }
                 }
                 reader.Read();
@@ -619,13 +649,20 @@ string AddLineAppend (string content, string drawLine, string drawVariable)
     return PlaceInString(content, drawLine, appendCode);
 }
 
+string AddArrayArgument (string content, string functionLine, string arrayName)
+{
+    var newFunctionLine = functionLine.Replace(")", $", {arrayName}_id)");
+    return content.Replace(functionLine, newFunctionLine);
+}
+
 enum ParallelActionType
 {
     Initialization,
     Exchange,
     Append,
     Destructure,
-    Assignment
+    Assignment,
+    AddMessage
 }
 
 struct ParallelAction
@@ -749,6 +786,12 @@ void MainReplace (UndertaleCode code)
             {
                 changed = true;
                 replaced = AddParallelAssignment(replaced, action.Arg1, action.Arg2, action.Arg3, Int32.Parse(action.Arg4), Int32.Parse(action.Arg5));
+                break;
+            }
+            case ParallelActionType.AddMessage:
+            {
+                changed = true;
+                replaced = AddArrayArgument(replaced, action.Arg1, action.Arg2);
                 break;
             }
         }
