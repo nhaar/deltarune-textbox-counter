@@ -870,14 +870,18 @@ string InlineFunctionReplace (string content, string line, string tempVar, strin
     var replaceString = "";
     var idIndex = 1;
     var newLine = line;
+    var tempName = tempVar.Replace(".", "_").Replace("[", "").Replace("]", "");
+    var assignmentName = new AssignmentVariable(tempVar);
+    assignmentName.Name += "_id";
     foreach (string call in calls)
     {
+        var currentTempName = $"{tempName}{idIndex}";
         replaceString += @$"
-        {tempVar}{idIndex} = {call};
-        {tempVar}_id[{idIndex}] = {functionVar}[0];
+        {currentTempName} = {call};
+        {assignmentName}[{idIndex}] = {functionVar}[0];
         ";
         var regex = new Regex(Regex.Escape(call));
-        newLine =  regex.Replace(newLine, $"{tempVar}{idIndex}", 1);
+        newLine =  regex.Replace(newLine, $"{currentTempName}", 1);
         idIndex++;
     }
     if (replace)
