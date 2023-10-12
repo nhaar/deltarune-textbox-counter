@@ -332,6 +332,7 @@ void Replace (string codeName, string text, string replacement)
 /// <param name="placement"></param>
 void Place (string codeName, string preceding, string placement)
 {
+    File.WriteAllText(FilePath + "/../test.txt", placement);
     ReplaceTextInGML(codeName, preceding, $"{preceding}{placement}");
 }
 
@@ -657,6 +658,7 @@ foreach (UndertaleCode code in toUpdate)
 {
     Console.WriteLine($"Replacing {code.Name.Content} ({i}/{total})");
     i++;
+    File.WriteAllText(FilePath + "/../test.txt", newCode[code.Name.Content]);
     code.ReplaceGML(newCode[code.Name.Content], Data);
 }
 
