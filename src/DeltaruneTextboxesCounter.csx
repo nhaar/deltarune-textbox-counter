@@ -243,6 +243,50 @@ using (XmlReader reader = XmlReader.Create(ScriptPath + "/../parallel.xml"))
                             Global.ParallelFiles[currentFile].Add(new ParallelAction(thisLine, ParallelActionType.Arbitrary, thisCode));
                             break;
                         }
+                        case "inline-function":
+                        {
+                            var thisLine = "";
+                            var thisTemp = "";
+                            var thisFunction = "";
+                            var thisReturned = "";
+                            do
+                            {
+                                if (reader.NodeType == XmlNodeType.Element)
+                                {
+                                    switch (reader.Name)
+                                    {
+                                        case "line":
+                                        {
+                                            reader.Read();
+                                            thisLine = reader.Value;
+                                            break;
+                                        }
+                                        case "temp":
+                                        {
+                                            reader.Read();
+                                            thisTemp = reader.Value;
+                                            break;
+                                        }
+                                        case "function":
+                                        {
+                reader.Read();
+                                            thisFunction = reader.Value;
+                                            break;
+                                        }
+                                        case "returned":
+                                        {
+                                            reader.Read();
+                                            thisReturned = reader.Value;
+                                            break;
+                                        }
+                                    }
+                                }
+                                reader.Read();
+                            }
+                            while (reader.Name != "inline-function");
+                            Global.ParallelFiles[currentFile].Add(new ParallelAction(thisLine, ParallelActionType.InlineFunction, thisTemp, thisFunction, thisReturned));
+                            break;
+                        }
                     }
                 }
                 reader.Read();
@@ -781,6 +825,52 @@ string ReplaceArrayArgument (string content, string functionLine, string arrayNa
     return content.Replace(functionLine, replaceString);
 }
 
+string InlineFunctionReplace (string content, string line, string tempVar, string functionName, string functionVar)
+{
+    var calls = new List<string>();
+    for (int i = 0; i < line.Length; i++)
+    {
+        char c = line[i];
+        if (c == functionName[0])
+        {
+            if (line.Substring(i, functionName.Length) == functionName)
+            {
+                var startIndex = i;
+                i += functionName.Length;   
+                var depth = 0;
+                do
+                {
+                    var char2 = line[i];
+                    if (char2 == '(')
+                        depth++;
+                    else if (char2 == ')')
+                        depth--;
+                    i++;
+                }
+                while (depth > 0);
+                var endIndex = i;
+                calls.Add(line.Substring(startIndex, endIndex - startIndex));
+            }
+        }
+    }
+
+    var replaceString = "";
+    var idIndex = 1;
+    var newLine = line;
+    foreach (string call in calls)
+    {
+        replaceString += @$"
+        {tempVar}{idIndex} = {call};
+        {tempVar}_id[{idIndex}] = {functionVar}[0];
+        ";
+        var regex = new Regex(Regex.Escape(call));
+        newLine =  regex.Replace(newLine, $"{tempVar}{idIndex}", 1);
+        idIndex++;
+    }
+    newLine = ReplaceArrayArgument(newLine, newLine, tempVar);
+    return content.Replace(line, $"{replaceString}\n{newLine}");
+}
+
 enum ParallelActionType
 {
     Initialization,
@@ -790,7 +880,8 @@ enum ParallelActionType
     Assignment,
     AddMessage,
     ReplaceArgument,
-    Arbitrary
+    Arbitrary,
+    InlineFunction
 }
 
 struct ParallelAction
@@ -932,6 +1023,12 @@ void MainReplace (UndertaleCode code)
             {
                 changed = true;
                 replaced = PlaceInString(replaced, action.Arg1, action.Arg2);
+                break;
+            }
+            case ParallelActionType.InlineFunction:
+            {
+                changed = true;
+                replaced = InlineFunctionReplace(replaced, action.Arg1, action.Arg2, action.Arg3, action.Arg4);
                 break;
             }
         }
