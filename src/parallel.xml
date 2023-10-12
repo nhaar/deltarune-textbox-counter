@@ -10,6 +10,9 @@
         <destructure>
             <variable>amessage2temp</variable>
         </destructure>
+        <destructure>
+            <variable>armorabilitytemp</variable>
+        </destructure>
     </file>
     <file>
         <name>gml_GlobalScript_scr_armorinfo_all</name>
@@ -22,6 +25,8 @@
         <exchange>chararmor1desc[i] = armordesctemp</exchange>
         <exchange>chararmor2name[i] = armornametemp</exchange>
         <exchange>chararmor2desc[i] = armordesctemp</exchange>
+        <exchange>chararmor1ability[i] = armorabilitytemp</exchange>
+        <exchange>chararmor2ability[i] = armorabilitytemp</exchange>
     </file>
     <file>
         <name>global</name>
@@ -102,15 +107,34 @@
     </file>
     <file>
         <name>gml_GlobalScript_scr_itemcomment</name>
-        
+        <add-msg>
+            <line>scr_itemcomment(global.submenucoord[10], wmsg)</line>
+            <variable>wmsg</variable>
+        </add-msg>
+    </file>
+    <file>
+        <name>gml_Object_obj_menuwriter_Create_0</name>
+        <init>msg = " "</init>
+    </file>
+    <file>
+        <name>gml_Object_obj_menuwriter_Draw_0</name>
+        <draw>
+            <line>draw_text(x, y, string_hash_to_newline(msg))</line>
+            <variable>msg</variable>
+        </draw>
     </file>
     <file>
         <name>gml_Object_obj_darkcontroller_Step_0</name>
         <init>wmsg = " "</init>
         <exchange>wmsg = amessage2temp</exchange>
+        <exchange>wmsg = amessage3temp</exchange>
+        <exchange>wmsg = amessage4temp</exchange>
     </file>
     <file>
         <name>gml_Object_obj_darkcontroller_Draw_0</name>
+        <exchange>_abilitytext[arno] = armorability[cur]</exchange>
+        <exchange>_abilitytext[1] = chararmor1ability[charcoord]</exchange>
+        <exchange>_abilitytext[2] = chararmor2ability[charcoord]</exchange>
         <draw>
             <line>draw_text((xx + 384), ((yy + 230) + (j * ch_vspace)), string_hash_to_newline(armorname[i]))</line>
             <variable>armorname[i]</variable>
@@ -130,6 +154,14 @@
         <draw>
             <line>draw_text((xx + 20), (yy + 10), string_hash_to_newline(chararmor2desc[charcoord]))</line>
             <variable>chararmor2desc[charcoord]</variable>
+        </draw>
+        <draw>
+            <line>draw_text((xx + 100), ((yy + 230) + (ch_vspace * (i + 3))), string_hash_to_newline(_abilitytext[i]))</line>
+            <variable>_abilitytext[i]</variable>
+        </draw>
+        <draw>
+            <line>draw_text((xx + 100), ((yy + 230) + (ch_vspace * (i + 3))), string_hash_to_newline(_abilitytext[i]))</line>
+            <variable>_abilitytext[i]</variable>
         </draw>
     </file>
     <file>
@@ -203,4 +235,5 @@
             <line>draw_text(60, (260 + (i * 40)), string_hash_to_newline(shopitemname[i]))</line>
             <variable>shopitemname[i]</variable>
         </draw>
+    </file>
 </files>
