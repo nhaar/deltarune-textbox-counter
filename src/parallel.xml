@@ -4,7 +4,24 @@
         <destructure>
             <variable>armornametemp</variable>
         </destructure>
+        <destructure>
+            <variable>armordesctemp</variable>
+        </destructure>
+        <destructure>
+            <variable>amessage2temp</variable>
+        </destructure>
+    </file>
+    <file>
+        <name>gml_GlobalScript_scr_armorinfo_all</name>
         <exchange>armorname[i] = armornametemp</exchange>
+        <exchange>armordesc[i] = armordesctemp</exchange>
+    </file>
+    <file>
+        <name>gml_GlobalScript_scr_armorinfo_mine</name>
+        <exchange>chararmor1name[i] = armornametemp</exchange>
+        <exchange>chararmor1desc[i] = armordesctemp</exchange>
+        <exchange>chararmor2name[i] = armornametemp</exchange>
+        <exchange>chararmor2desc[i] = armordesctemp</exchange>
     </file>
     <file>
         <name>global</name>
@@ -18,9 +35,11 @@
         <init>fusionIngredientName1[fusioncount] = "--"</init>
         <init>fusionIngredientName2[fusioncount] = "--"</init>
         <init>fusionResultName[fusioncount] = "--"</init>
+        <init>fusionResultTopComment[fusioncount] = "--"</init>
         <exchange>fusionIngredientName1[fusioncount] = armornametemp</exchange>
         <exchange>fusionIngredientName2[fusioncount] = armornametemp</exchange>
         <exchange>fusionResultName[fusioncount] = armornametemp</exchange>
+        <exchange>fusionResultTopComment[fusioncount] = armordesctemp</exchange>
     </file>
     <file>
         <name>gml_Object_obj_npc_hammerguy_Create_0</name>
@@ -30,10 +49,12 @@
         <name>gml_Object_obj_fusionmenu_Step_0</name>
         <init>optionText[1][j] = " "</init>
         <init>optionText[_n][j] = " "</init>
+        <init>optionTopComment[i][j] = " "</init>
         <exchange>obj_npc_hammerguy.fusionResultName = fusionResultName[menuCoord[0]]</exchange>
         <exchange>optionCommentB[0][j] = fusionIngredientName2[j]</exchange>
         <exchange>optionCommentA[0][j] = fusionIngredientName1[j]</exchange>
         <exchange>optionText[0][j] = fusionResultName[j]</exchange>
+        <exchange>optionTopComment[0][j] = fusionResultTopComment[j]</exchange>
     </file>
     <file>
         <name>gml_Object_obj_npc_hammerguy_Step_0</name>
@@ -62,6 +83,14 @@
             <line>draw_text_transformed(textx, texty, string_hash_to_newline(optionText[m][j]), textxscale, textyscale, 0)</line>
             <variable>optionText[m][j]</variable>
         </draw>
+        <draw>
+            <line>draw_text(((xx + 18) + x_offset), (yy + 20), string_hash_to_newline(optionTopComment[m][menuCoord[m]]))</line>
+            <variable>optionTopComment[m][menuCoord[m]]</variable>
+        </draw>
+        <draw>
+            <line>draw_text((xx + 20), (yy + 20), string_hash_to_newline(optionTopComment[m][menuCoord[m]]))</line>
+            <variable>optionTopComment[m][menuCoord[m]]</variable>
+        </draw>
     </file>
     <file>
         <name>gml_GlobalScript_scr_shopmenu</name>
@@ -70,6 +99,15 @@
             <line>draw_text(60, (260 + (j * 40)), string_hash_to_newline(_itempname))</line>
             <variable>_itempname</variable>
         </draw>
+    </file>
+    <file>
+        <name>gml_GlobalScript_scr_itemcomment</name>
+        
+    </file>
+    <file>
+        <name>gml_Object_obj_darkcontroller_Step_0</name>
+        <init>wmsg = " "</init>
+        <exchange>wmsg = amessage2temp</exchange>
     </file>
     <file>
         <name>gml_Object_obj_darkcontroller_Draw_0</name>
@@ -85,6 +123,14 @@
             <line>draw_text((xx + 365), (yy + 172), string_hash_to_newline(chararmor2name[charcoord]))</line>
             <variable>chararmor2name[charcoord]</variable>
         </draw>
+        <draw>
+            <line>draw_text((xx + 20), (yy + 10), string_hash_to_newline(chararmor1desc[charcoord]))</line>
+            <variable>chararmor1desc[charcoord]</variable>
+        </draw>
+        <draw>
+            <line>draw_text((xx + 20), (yy + 10), string_hash_to_newline(chararmor2desc[charcoord]))</line>
+            <variable>chararmor2desc[charcoord]</variable>
+        </draw>
     </file>
     <file>
         <name>gml_GlobalScript_scr_itemget_anytype_text</name>
@@ -97,9 +143,64 @@
     </file>
     <file>
         <name>gml_GlobalScript_scr_text</name>
+        <init>itemgetstring = ""</init>
+        <add-msg>
+            <line>msgnext(itemgetstring)</line>
+            <variable>itemgetstring</variable>
+        </add-msg>
+        <add-msg>
+            <line>msgset(0, itemgetstring)</line>
+            <variable>itemgetstring</variable>
+        </add-msg>
+    </file>
+    <file>
+        <name>gml_Object_obj_treasure_room_Other_10</name>
         <add-msg>
             <line>msgnext(itemgetstring)</line>
             <variable>itemgetstring</variable>
         </add-msg>
     </file>
+    <file>
+        <name>gml_Object_obj_shop_ch2_music_Create_0</name>
+        <exchange>shopitemname[i] = armornametemp</exchange>
+    </file>
+    <file>
+        <name>gml_Object_obj_shop_ch2_music_Draw_0</name>
+        <draw>
+            <line>draw_text(60, (260 + (i * 40)), string_hash_to_newline(shopitemname[i]))</line>
+            <variable>shopitemname[i]</variable>
+        </draw>
+    </file>
+    <file>
+        <name>gml_Object_obj_shop_ch2_spamton_Create_0</name>
+        <exchange>shopitemname[i] = armornametemp</exchange>
+    </file>
+    <file>
+        <name>gml_Object_obj_shop_ch2_spamton_Draw_0</name>
+        <draw>
+            <line>draw_text(60, (260 + (i * 40)), string_hash_to_newline(shopitemname[i]))</line>
+            <variable>shopitemname[i]</variable>
+        </draw>
+    </file>
+    <file>
+        <name>gml_Object_obj_shop_ch2_swatch_Create_0</name>
+        <exchange>shopitemname[i] = armornametemp</exchange>
+    </file>
+    <file>
+        <name>gml_Object_obj_shop_ch2_swatch_Draw_0</name>
+        <draw>
+            <line>draw_text(60, (260 + (i * 40)), string_hash_to_newline(shopitemname[i]))</line>
+            <variable>shopitemname[i]</variable>
+        </draw>
+    </file>
+        <file>
+        <name>gml_Object_obj_shop1_Create_0</name>
+        <exchange>shopitemname[i] = armornametemp</exchange>
+    </file>
+    <file>
+        <name>gml_Object_obj_shop1_Draw_0</name>
+        <draw>
+            <line>draw_text(60, (260 + (i * 40)), string_hash_to_newline(shopitemname[i]))</line>
+            <variable>shopitemname[i]</variable>
+        </draw>
 </files>
