@@ -214,6 +214,36 @@ using (XmlReader reader = XmlReader.Create(ScriptPath + "/../parallel.xml"))
                             Global.ParallelFiles[currentFile].Add(new ParallelAction(thisLine, ParallelActionType.ReplaceArgument, thisVariable));
                             break;
                         }
+                        case "arbitrary":
+                        {
+                            var thisLine = "";
+                            var thisCode = "";
+                            do
+                            {
+                                if (reader.NodeType == XmlNodeType.Element)
+                                {
+                                    switch (reader.Name)
+                                    {
+                                        case "line":
+                                        {
+                                            reader.Read();
+                                            thisLine = reader.Value;
+                                            break;
+                                        }
+                                        case "code":
+                                        {
+                                            reader.Read();
+                                            thisCode = reader.Value;
+                                            break;
+                                        }
+                                    }
+                                }
+                                reader.Read();
+                            }
+                            while (reader.Name != "arbitrary");
+                            Global.ParallelFiles[currentFile].Add(new ParallelAction(thisLine, ParallelActionType.Arbitrary, thisCode));
+                            break;
+                        }
                     }
                 }
                 reader.Read();
@@ -760,7 +790,8 @@ enum ParallelActionType
     Destructure,
     Assignment,
     AddMessage,
-    ReplaceArgument
+    ReplaceArgument,
+    Arbitrary
 }
 
 struct ParallelAction
@@ -896,6 +927,12 @@ void MainReplace (UndertaleCode code)
             {
                 changed = true;
                 replaced = ReplaceArrayArgument(replaced, action.Arg1, action.Arg2);
+                break;
+            }
+            case ParallelActionType.Arbitrary:
+            {
+                changed = true;
+                replaced = PlaceInString(replaced, action.Arg1, action.Arg2);
                 break;
             }
         }
