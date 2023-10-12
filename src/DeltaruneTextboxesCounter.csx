@@ -609,6 +609,11 @@ void UseDebug ()
     Replace("gml_GlobalScript_scr_gamestart", "global.debug = false", "global.debug = true");
     Replace("gml_Object_obj_cutscene_master_Draw_64", "global.debug == true", "0");
 
+    Append("gml_Object_obj_time_Draw_0", @$"
+    draw_set_color(c_white);
+    {DrawText("20", "0", "\"global.read_total: \" + string(global.read_total)")}
+    ");
+
     // variables to print
     string[] watchVars =
     {
