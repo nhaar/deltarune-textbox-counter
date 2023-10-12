@@ -25,7 +25,6 @@ using (XmlReader reader = XmlReader.Create(ScriptPath + "/../parallel.xml"))
                         {
                             reader.Read();
                             currentFile = reader.Value;
-                            Console.WriteLine(currentFile);
                             Global.ParallelFiles[currentFile] = new List<ParallelAction>();
                             break;
                         }
