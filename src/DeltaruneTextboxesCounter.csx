@@ -269,7 +269,7 @@ using (XmlReader reader = XmlReader.Create(ScriptPath + "/../parallel.xml"))
                                         }
                                         case "function":
                                         {
-                reader.Read();
+                                            reader.Read();
                                             thisFunction = reader.Value;
                                             break;
                                         }
