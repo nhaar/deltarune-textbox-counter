@@ -163,6 +163,10 @@
             <line>draw_text((xx + 100), ((yy + 230) + (ch_vspace * (i + 3))), string_hash_to_newline(_abilitytext[i]))</line>
             <variable>_abilitytext[i]</variable>
         </draw>
+        <draw>
+            <line>draw_text((xx + 325), (((yy + voff) + 140) + (i * vspacing)), string_hash_to_newline(global.asc_def[global.input_k[i]]))</line>
+            <variable>global.asc_def[global.input_k[i]]</variable>
+        </draw>
     </file>
     <file>
         <name>gml_GlobalScript_scr_itemget_anytype_text</name>
@@ -184,6 +188,84 @@
             <line>msgset(0, itemgetstring)</line>
             <variable>itemgetstring</variable>
         </add-msg>
+        <assignment>
+            <line>global.msg[0] = stringsetsubloc("* Er^1, Kris^1, you know you can hold [~1] to run...?/", input_name, "scr_text_slash_scr_text_gml_232_0")</line>
+            <left>global.msg[0]</left>
+            <left-index>1</left-index>
+            <right>_control</right>
+        </assignment>
+        <assignment>
+            <line>global.msg[0] = stringsetsubloc("* Right^1!&amp;* You'll move faster by holding [~1]!/", input_name, "scr_text_slash_scr_text_gml_250_0")</line>
+            <left>global.msg[0]</left>
+            <left-index>1</left-index>
+            <right>_control</right>
+        </assignment>
+        <assignment>
+            <line>global.msg[1] = stringsetsubloc("* ... You can skip text by pressing [~1]?/", scr_get_input_name(5), "scr_text_slash_scr_text_gml_265_0")</line>
+            <left>global.msg[1]</left>
+            <left-index>1</left-index>
+            <right>_control</right>
+        </assignment>
+        <assignment>
+            <line>global.msg[4] = stringsetsubloc("\\E0* Press [~1] to open the menu and use it in your ITEMS./", scr_get_input_name(6), "scr_text_slash_scr_text_gml_314_0_b")</line>
+            <left>global.msg[4]</left>
+            <left-index>1</left-index>
+            <right>_control</right>
+        </assignment>
+        <assignment>
+            <line>global.msg[0] = stringsetloc("* Susie's BUSTER^1, RUDE as may be^1.../", "scr_text_slash_scr_text_gml_1342_0")</line>
+            <left>global.msg[0]</left>
+            <left-index>1</left-index>
+            <right>_control</right>
+        </assignment>
+        <assignment>
+            <line>global.msg[0] = stringsetloc("* Susie's BUSTER^1, RUDE as may be^1.../", "scr_text_slash_scr_text_gml_1342_0")</line>
+            <left>global.msg[0]</left>
+            <left-index>1</left-index>
+            <right>_control</right>
+        </assignment>
+        <arbitrary>
+            <line>msgsetloc(0, "* Here is a reminder of the controls. Change them in the config menu./", "scr_text_slash_scr_text_gml_7527_0")</line>
+            <code>msgtempvar1 = scr_get_input_name(4);</code>
+        </arbitrary>
+        <assignment>
+            <line>msgtempvar1 = scr_get_input_name(4);</line>
+            <left>msgtempvar1</left>
+            <left-index>1</left-index>
+            <right>_control</right>
+        </assignment>
+        <arbitrary>
+            <line>msgsetloc(0, "* Here is a reminder of the controls. Change them in the config menu./", "scr_text_slash_scr_text_gml_7527_0")</line>
+            <code>msgtempvar2 = scr_get_input_name(5);</code>
+        </arbitrary>
+        <assignment>
+            <line>msgtempvar2 = scr_get_input_name(5);</line>
+            <left>msgtempvar2</left>
+            <left-index>1</left-index>
+            <right>_control</right>
+        </assignment>
+        <arbitrary>
+            <line>msgsetloc(0, "* Here is a reminder of the controls. Change them in the config menu./", "scr_text_slash_scr_text_gml_7527_0")</line>
+            <code>msgtempvar3 = scr_get_input_name(6);</code>
+        </arbitrary>
+        <assignment>
+            <line>msgtempvar3 = scr_get_input_name(6);</line>
+            <left>msgtempvar3</left>
+            <left-index>1</left-index>
+            <right>_control</right>
+        </assignment>
+        <replace-arg>
+            <line>msgnextsubloc("* ~1&amp;* Confirm and interact with things./", scr_get_input_name(4), "scr_text_slash_scr_text_gml_7528_0")</line>
+            <variable>msgtempvar1</variable>
+        </replace-arg>
+        <replace-arg>
+            <line>msgnextsubloc("* ~1&amp;* Cancel. Hold to RUN. Shows all text instantly./", scr_get_input_name(5), "scr_text_slash_scr_text_gml_7529_0")</line>
+            <variable>msgtempvar2</variable>
+        </replace-arg>
+        <replace-arg>
+            <line>msgnextsubloc("* ~1&amp;* Opens the menu. Hold down to quickly skip textboxes./%", scr_get_input_name(6), "scr_text_slash_scr_text_gml_7530_0")</line>
+            <variable>msgtempvar3</variable>
+        </replace-arg>
     </file>
     <file>
         <name>gml_Object_obj_treasure_room_Other_10</name>
@@ -235,5 +317,20 @@
             <line>draw_text(60, (260 + (i * 40)), string_hash_to_newline(shopitemname[i]))</line>
             <variable>shopitemname[i]</variable>
         </draw>
+    </file>
+    <file>
+        <name>gml_GlobalScript_scr_ascii_input_names</name>
+        <destructure>
+            <variable>global.asc_def</variable>
+            <dim>1</dim>
+        </destructure>
+    </file>
+    <file>
+        <name>gml_GlobalScript_scr_get_input_name</name>
+        <assignment>
+            <line>_control = ((left_bracket + global.asc_def[global.input_k[argument0]]) + right_bracket)</line>
+            <left>_control</left>
+            <right>global.asc_def[global.input_k[argument0]]</right>
+        </assignment>
     </file>
 </files>
