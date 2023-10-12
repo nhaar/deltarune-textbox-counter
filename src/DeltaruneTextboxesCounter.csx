@@ -103,6 +103,57 @@ using (XmlReader reader = XmlReader.Create(ScriptPath + "/../parallel.xml"))
                             Global.ParallelFiles[currentFile].Add(new ParallelAction(thisLine, ParallelActionType.Append, thisVariable));
                             break;
                         }
+                        case "assignment":
+                        {
+                            var thisLine = "";
+                            var thisLeft = "";
+                            var thisLeftIndex = "0";
+                            var thisRight = "";
+                            var thisRightIndex = "0";
+                            do
+                            {
+                                if (reader.NodeType == XmlNodeType.Element)
+                                {
+                                    switch (reader.Name)
+                                    {
+                                        case "line":
+                                        {
+                                            reader.Read();
+                                            thisLine = reader.Value;
+                                            break;
+                                        }
+                                        case "left":
+                                        {
+                                            reader.Read();
+                                            thisLeft = reader.Value;
+                                            break;
+                                        }
+                                        case "left-index":
+                                        {
+                                            reader.Read();
+                                            thisLeftIndex = reader.Value;
+                                            break;
+                                        }
+                                        case "right":
+                                        {
+                                            reader.Read();
+                                            thisRight = reader.Value;
+                                            break;
+                                        }
+                                        case "right-index":
+                                        {
+                                            reader.Read();
+                                            thisRightIndex = reader.Value;
+                                            break;
+                                        }
+                                    }
+                                }
+                                reader.Read();
+                            }
+                            while (reader.Name != "assignment");
+                            Global.ParallelFiles[currentFile].Add(new ParallelAction(thisLine, ParallelActionType.Assignment, thisLeft, thisRight, thisLeftIndex, thisRightIndex));
+                            break;
+                        }
                     }
                 }
                 reader.Read();
@@ -165,7 +216,10 @@ string DrawText (string x, string y, string text)
 
 // set up the basic text counter stuff
 Append("gml_Object_obj_time_Create_0", @$"
-global.msg_id[100] = """";
+for (var i = 0; i < 100; i++)
+{{
+    global.msg_id[i][0] = 0;
+}}
 directory_create(""textstuff"");
 
 global.read_text[12666] = 0;
@@ -193,12 +247,14 @@ else
 ");
 
 ImportGMLFile(ScriptPath + "/../append_text_line.gml");
+ImportGMLFile(ScriptPath + "/../append_text_array.gml");
+ImportGMLFile(ScriptPath + "/../arraify_text_id.gml");
 
 // always add when it is created
-Append("gml_Object_obj_writer_Create_0", "append_text_line(global.msg_id[0], global.msg[0]);");
+Append("gml_Object_obj_writer_Create_0", "append_text_array(global.msg_id[0], global.msg[0]);");
 
 // adding it when next message is called
-Place("gml_GlobalScript_scr_nextmsg", "mystring = nstring[msgno]", "append_text_line(global.msg_id[msgno], global.msg[msgno]);");
+Place("gml_GlobalScript_scr_nextmsg", "mystring = nstring[msgno]", "append_text_array(global.msg_id[msgno], global.msg[msgno]);");
 
 // modifying functions to automatically track the text id
 Replace("gml_GlobalScript_msgset", @"function msgset(argument0, argument1) //gml_Script_msgset
@@ -227,7 +283,7 @@ Replace("gml_GlobalScript_msgsetloc", @"function msgsetloc(argument0, argument1,
     var localized_string_id = argument2
     if (!is_english())
         str = scr_84_get_lang_string(localized_string_id)
-    msgset(msg_index, str, argument2)
+    msgset(msg_index, str, arraify_text_id(argument2))
 }");
 
 Replace(
@@ -245,7 +301,7 @@ Replace(
 Replace(
 "gml_GlobalScript_msgsetsubloc",
 "msgset(msg_index, str)",
-"msgset(msg_index, str, localized_format_string_id)"
+"msgset(msg_index, str, arraify_text_id(localized_format_string_id))"
 );
 
 Replace(
@@ -274,7 +330,7 @@ Replace("gml_GlobalScript_c_msgsetloc", @"function c_msgsetloc(argument0, argume
     var str = english
     if (!is_english())
         str = scr_84_get_lang_string(localized_string_id)
-    c_msgset(msg_index, str, argument2)
+    c_msgset(msg_index, str, arraify_text_id(argument2))
 }
 ");
 
@@ -308,14 +364,14 @@ Replace(
     var localized_string_id = argument1
     if (!is_english())
         str = scr_84_get_lang_string(localized_string_id)
-    msgnext(str, argument1)
+    msgnext(str, arraify_text_id(argument1))
 }"
 );
 
 Replace(
 "gml_GlobalScript_msgnextsubloc",
 "msgnext(str)",
-"msgnext(str, localized_string_id)"
+"msgnext(str, arraify_text_id(localized_string_id))"
 );
 
 Replace(
@@ -354,7 +410,7 @@ Replace(
     var localized_string_id = argument1
     if (!is_english())
         str = scr_84_get_lang_string(localized_string_id)
-    c_msgnext(str, argument1)
+    c_msgnext(str, arraify_text_id(argument1))
 }"
 );
 
@@ -516,13 +572,18 @@ string PlaceInString (string str, string line, string placement)
     return str.Replace(line, $"{line}\n{placement}");
 }
 
-string AddParallelInitialization (string content, string originalLine)
+string AddParallelInitialization (string content, string originalLine, int length = 1)
 {
     var assignment = new Assignment(originalLine);
     var leftSide = new AssignmentVariable(assignment.LeftSide);
-    return PlaceInString(content, originalLine, @$"
-    {leftSide.Name}_id{leftSide.Brackets} = 0;
-    ");
+    var initString = "";
+    for (int i = 0; i < length; i++)
+    {
+        initString += @$"
+        {leftSide.Name}_id{leftSide.Brackets}[{i}] = 0;
+        ";
+    }
+    return PlaceInString(content, originalLine, initString);
 }
 
 
@@ -538,11 +599,23 @@ string AddParallelExchange (string content, string originalLine)
     return PlaceInString(content, originalLine, exchange);
 }
 
+string AddParallelAssignment (string content, string line, string leftName, string rightName, int leftIndex = 0, int rightIndex = 0)
+{
+    var leftVariable = new AssignmentVariable(leftName);
+    var rightVariable = new AssignmentVariable(rightName);
+    var newLeftVariable = new AssignmentVariable($"{leftVariable.Name}_id{leftVariable.Brackets}[{leftIndex}]");
+    var newRightVariable = new AssignmentVariable($"{rightVariable.Name}_id{rightVariable.Brackets}[{rightIndex}]");
+    var newAssignment = new Assignment(newLeftVariable.ToString(), newRightVariable.ToString());
+    return PlaceInString(content, line, newAssignment.ToString());
+}
+
 string AddLineAppend (string content, string drawLine, string drawVariable)
 {
     var originalVariable = new AssignmentVariable(drawVariable);
     var newVariable = new AssignmentVariable($"{originalVariable.Name}_id{originalVariable.Brackets}");
-    var appendCode = $"append_text_line({newVariable}, {originalVariable})";
+    var appendCode = @$"
+    append_text_array({newVariable}, {originalVariable});
+    ";
     return PlaceInString(content, drawLine, appendCode);
 }
 
@@ -551,7 +624,8 @@ enum ParallelActionType
     Initialization,
     Exchange,
     Append,
-    Destructure
+    Destructure,
+    Assignment
 }
 
 struct ParallelAction
@@ -560,12 +634,21 @@ struct ParallelAction
 
     public string Arg2;
 
+    public string Arg3;
+
+    public string Arg4;
+
+    public string Arg5;
+
     public ParallelActionType Type;
 
-    public ParallelAction (string arg1, ParallelActionType type, string arg2 = "")
+    public ParallelAction (string arg1, ParallelActionType type, string arg2 = "", string arg3 = "", string arg4 = "", string arg5 = "")
     {
         Arg1 = arg1;
         Arg2 = arg2;
+        Arg3 = arg3;
+        Arg4 = arg4;
+        Arg5 = arg5;
         Type = type;
     }
 }
@@ -615,7 +698,7 @@ class StringsetlocPattern
         var assignment = new Assignment(assignmentLine);
         var leftSide = new AssignmentVariable(assignment.LeftSide);
         var rightSide = new StringsetlocCall(assignment.RightSide);
-        var newLeftSide = new AssignmentVariable($"{leftSide.Name}_id{leftSide.Brackets}");
+        var newLeftSide = new AssignmentVariable($"{leftSide.Name}_id{leftSide.Brackets}[0]");
         return $@"
         {assignmentLine}
         {new Assignment(newLeftSide.ToString(), $"\"{rightSide.TextId}\"")}
@@ -660,6 +743,12 @@ void MainReplace (UndertaleCode code)
                     changed = true;
                     replaced = pattern.Replace(replaced);
                 }
+                break;
+            }
+            case ParallelActionType.Assignment:
+            {
+                changed = true;
+                replaced = AddParallelAssignment(replaced, action.Arg1, action.Arg2, action.Arg3, Int32.Parse(action.Arg4), Int32.Parse(action.Arg5));
                 break;
             }
         }

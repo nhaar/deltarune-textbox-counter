@@ -1,0 +1,98 @@
+<files>
+    <file>
+        <name>gml_GlobalScript_scr_armorinfo</name>
+        <destructure>
+            <variable>armornametemp</variable>
+        </destructure>
+        <exchange>armorname[i] = armornametemp</exchange>
+    </file>
+    <file>
+        <name>global</name>
+        <destructure>
+            <variable>global.msg</variable>
+            <dim>1</dim>
+        </destructure>
+    </file>
+    <file>
+        <name>gml_GlobalScript_scr_fusion_queue</name>
+        <init>fusionIngredientName1[fusioncount] = "--"</init>
+        <init>fusionIngredientName2[fusioncount] = "--"</init>
+        <init>fusionResultName[fusioncount] = "--"</init>
+        <exchange>fusionIngredientName1[fusioncount] = armornametemp</exchange>
+        <exchange>fusionIngredientName2[fusioncount] = armornametemp</exchange>
+        <exchange>fusionResultName[fusioncount] = armornametemp</exchange>
+    </file>
+    <file>
+        <name>gml_Object_obj_npc_hammerguy_Create_0</name>
+        <init>fusionResultName = "ITEM"</init>
+    </file>
+    <file>
+        <name>gml_Object_obj_fusionmenu_Step_0</name>
+        <init>optionText[1][j] = " "</init>
+        <init>optionText[_n][j] = " "</init>
+        <exchange>obj_npc_hammerguy.fusionResultName = fusionResultName[menuCoord[0]]</exchange>
+        <exchange>optionCommentB[0][j] = fusionIngredientName2[j]</exchange>
+        <exchange>optionCommentA[0][j] = fusionIngredientName1[j]</exchange>
+        <exchange>optionText[0][j] = fusionResultName[j]</exchange>
+    </file>
+    <file>
+        <name>gml_Object_obj_npc_hammerguy_Step_0</name>
+        <draw>
+            <line>msgsetsubloc(0, "* (You got ~1!)/%", fusionResultName, "obj_npc_hammerguy_slash_Step_0_gml_251_0\)</line>
+            <variable>fusionResultName</variable>
+        </draw>
+    </file>
+    <file>
+        <name>gml_Object_obj_custommenu_Create_0</name>
+        <init>optionCommentA[i][j] = " "</init>
+        <init>optionCommentB[i][j] = " "</init>
+        <init>optionText[i][j] = "---"</init>
+    </file>
+    <file>
+        <name>gml_Object_obj_custommenu_Draw_0</name>
+        <draw>
+            <line>draw_text_transformed((textx + optionCommentAXOffset[m][j]), (texty + optionCommentAYOffset[m][j]), string(optionCommentA[m][j]), textxscale, textyscale, 0)</line>
+            <variable>optionCommentA[m][j]</variable>
+        </draw>
+        <draw>
+            <line>draw_text_transformed((textx + optionCommentBXOffset[m][j]), (texty + optionCommentBYOffset[m][j]), string(optionCommentB[m][j]), textxscale, textyscale, 0)</line>
+            <variable>optionCommentB[m][j]</variable>
+        </draw>
+        <draw>
+            <line>draw_text_transformed(textx, texty, string_hash_to_newline(optionText[m][j]), textxscale, textyscale, 0)</line>
+            <variable>optionText[m][j]</variable>
+        </draw>
+    </file>
+    <file>
+        <name>gml_GlobalScript_scr_shopmenu</name>
+        <exchange>_itempname = armorname[i]</exchange>
+        <draw>
+            <line>draw_text(60, (260 + (j * 40)), string_hash_to_newline(_itempname))</line>
+            <variable>_itempname</variable>
+        </draw>
+    </file>
+    <file>
+        <name>gml_Object_obj_darkcontroller_Draw_0</name>
+        <draw>
+            <line>draw_text((xx + 384), ((yy + 230) + (j * ch_vspace)), string_hash_to_newline(armorname[i]))</line>
+            <variable>armorname[i]</variable>
+        </draw>
+        <draw>
+            <line>draw_text((xx + 365), (yy + 142), string_hash_to_newline(chararmor1name[charcoord]))</line>
+            <variable>chararmor1name[charcoord]</variable>
+        </draw>
+        <draw>
+            <line>draw_text((xx + 365), (yy + 172), string_hash_to_newline(chararmor2name[charcoord]))</line>
+            <variable>chararmor2name[charcoord]</variable>
+        </draw>
+    </file>
+    <file>
+        <name>gml_GlobalScript_scr_itemget_anytype_text</name>
+        <assignment>
+            <line>itemgetstring = stringsetsubloc("* (\\cY~1\\cW was added to your \\cY~2\\cW.)", itemname, itemtypename, "obj_treasure_room_slash_Other_10_gml_76_0")</line>
+            <left>itemgetstring</left>
+            <right>itemname</right>
+            <left-index>1</left-index>
+        </assignment>
+    </file>
+</files>

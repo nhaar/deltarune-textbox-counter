@@ -4,3 +4,4 @@
 /src/*
 !/src/*.csx
 !/src/*.gml
+!/src/*.xml
