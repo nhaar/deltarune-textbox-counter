@@ -279,6 +279,7 @@ else
 ImportGMLFile(ScriptPath + "/../append_text_line.gml");
 ImportGMLFile(ScriptPath + "/../append_text_array.gml");
 ImportGMLFile(ScriptPath + "/../arraify_text_id.gml");
+ImportGMLFile(ScriptPath + "/../unarraify_text_id.gml");
 
 // always add when it is created
 Append("gml_Object_obj_writer_Create_0", "append_text_array(global.msg_id[0], global.msg[0]);");
@@ -400,8 +401,33 @@ Replace(
 
 Replace(
 "gml_GlobalScript_msgnextsubloc",
-"msgnext(str)",
-"msgnext(str, arraify_text_id(localized_string_id))"
+
+@"var args;
+function msgnextsubloc() //gml_Script_msgnextsubloc
+{
+    var len = argument_count
+    for (var i = 0; i < len; i++)
+        args[i] = argument[i]
+    var format_string = argument[0]
+    var localized_string_id = argument[(len - 1)]
+    if (!is_english())
+        format_string = scr_84_get_lang_string(localized_string_id)
+    var str = substringargs(format_string, 1, args)
+    msgnext(str)
+}",
+@"var args;
+function msgnextsubloc() //gml_Script_msgnextsubloc
+{
+    var len = argument_count
+    for (var i = 0; i < len; i++)
+        args[i] = argument[i]
+    var format_string = argument[0]
+    var localized_string_id = unarraify_text_id(argument[(len - 1)])
+    if (!is_english())
+        format_string = scr_84_get_lang_string(localized_string_id)
+    var str = substringargs(format_string, 1, args)
+    msgnext(str, arraify_text_id(localized_string_id))
+}"
 );
 
 Replace(
