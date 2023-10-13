@@ -433,6 +433,10 @@ Dictionary<string, int[]> StringFunctions = new()
     { "string_char_at", new[] { 0, 2 } }
 };
 
+Dictionary<string, string[]> ExceptionalCalls = new()
+{
+};
+
 foreach (string drawFunction in DrawFunctions.Keys)
 {
     CreateNewFunction(drawFunction, DrawFunctions[drawFunction], true);
@@ -489,15 +493,11 @@ void ReplaceDrawFunctions (UndertaleCode code)
             codeContent = functionRegex.Replace(codeContent, $"new_{function}");
         }
     }
-
-    var newStringWidthRegex = new Regex(@"\bstring_width\b");
-    if (
-        newStringWidthRegex.IsMatch(codeContent) &&
-        code.Name.Content != "new_string_width"
-    )
+    var exceptionalCalls = ExceptionalCalls.ContainsKey(code.Name.Content) ? ExceptionalCalls[code.Name.Content] : new string[0];
+    foreach (string call in exceptionalCalls)
     {
         update = true;
-        codeContent = newStringWidthRegex.Replace(codeContent, "new_string_width");
+        codeContent = codeContent.Replace(call, $"clean_text_string({call}, 1)");
     }
 
     if (update)
