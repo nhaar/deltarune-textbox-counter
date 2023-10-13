@@ -376,7 +376,7 @@ ImportGMLString(
         before_delimiter = string_copy(str, 1, (start_index - 1))
         rest = string_copy(str, (start_index + string_length(delimiter)), string_length(str))
         between_delimiters = string_copy(rest, 1, string_length(rest) - string_length(delimiter))
-        if (cancel_append != false)
+        if (cancel_append != true)
             append_text_line(between_delimiters)
         end_index = string_pos(delimiter, rest)
         after_delimiter = string_copy(rest, (end_index + string_length(delimiter)), string_length(str))
