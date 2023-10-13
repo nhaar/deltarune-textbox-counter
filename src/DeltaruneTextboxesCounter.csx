@@ -416,25 +416,23 @@ Dictionary<string, int[]> DrawFunctions = new()
     { "draw_text_transformed", new[] { 2, 6 } },
     { "draw_text_width", new[] { 2, 4 } },
     { "draw_text", new[] { 2, 3 } },
-    { "draw_text_colour", new[] { 2, 8 } }
+};
+
+Dictionary<string, int[]> StringFunctions = new()
+{
+    // initially required for displaying enemy names with proper width in battle
+    { "string_width", new[] { 0, 1 } }
+};
 };
 
 foreach (string drawFunction in DrawFunctions.Keys)
 {
-    var argsInfo = DrawFunctions[drawFunction];
-    var argNames = new List<string>();
-    for (int i = 0; i < argsInfo[1]; i++) {
-        argNames.Add($"argument{i}");
-    }
-    var argString = $"({String.Join(", ", argNames)})";
-    var callString = argString.Replace($"argument{argsInfo[0]}", $"clean_text_string(argument{argsInfo[0]})");
-    var newFunction = $"new_{drawFunction}";
-    ImportGMLString(newFunction, @$"
-    function {newFunction}{argString}
-    {{
-        {drawFunction}{callString}
-    }}
-    ");
+    CreateNewFunction(drawFunction, DrawFunctions[drawFunction], true);
+}
+
+foreach (string stringFunction in StringFunctions.Keys)
+{
+    CreateNewFunction(stringFunction, StringFunctions[stringFunction], false);
 }
 
 UndertaleCode[] Ch2Code = Data.Code.Where(c => c.ParentEntry == null && !c.Name.Content.Contains("ch1")).ToArray();
@@ -468,17 +466,18 @@ void ReplaceDrawFunctions (UndertaleCode code)
     var codeContent = Decompiler.Decompile(code, DECOMPILE_CONTEXT.Value);
     var update = false;
 
-    foreach (string drawFunction in DrawFunctions.Keys)
+    var newFunctions = DrawFunctions.Keys.Union(StringFunctions.Keys);
+    foreach (string function in newFunctions)
     {   
-        var drawFunctionRegex = new Regex($@"\b{drawFunction}\b");
+        var functionRegex = new Regex($@"\b{function}\b");
         if (
-            drawFunctionRegex.IsMatch(codeContent) &&
-            code.Name.Content != $"gml_GlobalScript_{drawFunction}" &&
-            code.Name.Content != $"new_{drawFunction}"
+            functionRegex.IsMatch(codeContent) &&
+            code.Name.Content != $"gml_GlobalScript_{function}" &&
+            code.Name.Content != $"new_{function}"
         )
         {
             update = true;
-            codeContent = drawFunctionRegex.Replace(codeContent, $"new_{drawFunction}");
+            codeContent = functionRegex.Replace(codeContent, $"new_{function}");
         }
     }
 
@@ -520,6 +519,24 @@ void Place (string codeName, string preceding, string placement)
 {
     OutputCode(placement);
     ReplaceTextInGML(codeName, preceding, $"{preceding}{placement}");
+}
+
+void CreateNewFunction (string functionName, int[] argsInfo, bool append)
+{
+    var argNames = new List<string>();
+    for (int i = 0; i < argsInfo[1]; i++) {
+        argNames.Add($"argument{i}");
+    }
+    var argString = $"({String.Join(", ", argNames)})";
+    var cancelAppend = append ? "" : ", true";
+    var callString = argString.Replace($"argument{argsInfo[0]}", $"clean_text_string(argument{argsInfo[0]}{cancelAppend})");
+    var newFunction = $"new_{functionName}";
+    ImportGMLString(newFunction, @$"
+    function {newFunction}{argString}
+    {{
+        return {functionName}{callString};
+    }}
+    ");
 }
 
 void UseDebug ()
