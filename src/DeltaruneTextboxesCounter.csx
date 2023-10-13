@@ -480,7 +480,6 @@ async Task ReplaceDrawFunctions ()
 
 void ReplaceDrawFunctions (UndertaleCode code)
 {
-    var codeContent = Decompiler.Decompile(code, DECOMPILE_CONTEXT.Value);
     var update = false;
 
     var newFunctions = DrawFunctions.Keys.Union(StringFunctions.Keys).ToList();
@@ -502,15 +501,14 @@ void ReplaceDrawFunctions (UndertaleCode code)
             }
         }
     }
-    var exceptionalCalls = ExceptionalCalls.ContainsKey(code.Name.Content) ? ExceptionalCalls[code.Name.Content] : new string[0];
-    foreach (string call in exceptionalCalls)
-    {
-        update = true;
-        codeContent = codeContent.Replace(call, $"clean_text_string({call}, 1)");
-    }
-
-    if (update)
-    {
+    if (ExceptionalCalls.ContainsKey(code.Name.Content))
+    {        
+        var codeContent = Decompiler.Decompile(code, DECOMPILE_CONTEXT.Value);
+        var exceptionalCalls = ExceptionalCalls[code.Name.Content];
+        foreach (string call in exceptionalCalls)
+        {
+            codeContent = codeContent.Replace(call, $"clean_text_string({call}, 1)");
+        }
         UpdatedCode[code.Name.Content] = codeContent;
         ToUpdate.Add(code);
     }
