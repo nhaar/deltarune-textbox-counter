@@ -19,6 +19,38 @@ if (global.tensionselect >= 0)
 @""
 );
 
+Append(
+"gml_Object_obj_time_Create_0",
+@$"
+directory_create(""textstuff"");
+
+global.read_text_map = ds_map_create();
+global.read_total = 0;
+
+var read = file_text_open_read(""textstuff/text.txt"");
+if (read == -1)
+{{
+    var file = file_text_open_append(""textstuff/text.txt"");
+    file_text_close(file);
+}}
+else
+{{
+    while (true)
+    {{
+        var line = file_text_read_string(read);
+        if (line == """")
+            break;
+        global.read_total++;
+        ds_map_add(global.read_text_map, line, 1);
+        file_text_readln(read);
+    }}
+    file_text_close(read);
+}}
+"
+);
+
+ImportGMLFile(ScriptPath + "/../append_text_line.gml");
+
 Replace(
 "gml_GlobalScript_msgnextloc",
 @"function msgnextloc(argument0, argument1) //gml_Script_msgnextloc
