@@ -420,6 +420,8 @@ Dictionary<string, int[]> DrawFunctions = new()
     { "draw_text_colour", new[] { 2, 8 } },
     // initially required for the "HIT" text in punchout
     { "draw_text_ext", new[] { 2, 5 } },
+    // initially required for the in-queen battle text like "Defenseless"
+    { "draw_text_ext_transformed", new[] { 2, 8 } }
 };
 
 Dictionary<string, int[]> StringFunctions = new()
