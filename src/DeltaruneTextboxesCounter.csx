@@ -387,14 +387,6 @@ ImportGMLString(
 }}"
 );
 
-ImportGMLString(
-"new_string_width",
-@$"function new_string_width(argument0)
-{{
-    return string_width(clean_text_string(argument0, true));
-}}"
-);
-
 // take care of everything in obj_writer
 
 Place(
