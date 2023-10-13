@@ -7,6 +7,8 @@ EnsureDataLoaded();
 
 ThreadLocal<GlobalDecompileContext> DECOMPILE_CONTEXT = new ThreadLocal<GlobalDecompileContext>(() => new GlobalDecompileContext(Data, false));
 
+UseDebug();
+
 Replace(
 "gml_GlobalScript_msgnextloc",
 @"function msgnextloc(argument0, argument1) //gml_Script_msgnextloc
@@ -428,4 +430,11 @@ void Place (string codeName, string preceding, string placement)
 {
     OutputCode(placement);
     ReplaceTextInGML(codeName, preceding, $"{preceding}{placement}");
+}
+
+void UseDebug ()
+{
+    // enable debug mode
+    Replace("gml_GlobalScript_scr_gamestart", "global.debug = false", "global.debug = true");
+    Replace("gml_Object_obj_cutscene_master_Draw_64", "global.debug == true", "0");
 }
