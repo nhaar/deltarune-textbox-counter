@@ -7,20 +7,12 @@ EnsureDataLoaded();
 
 ThreadLocal<GlobalDecompileContext> DECOMPILE_CONTEXT = new ThreadLocal<GlobalDecompileContext>(() => new GlobalDecompileContext(Data, false));
 
-UseDebug();
-
-// very odd try catch hook that needs to be removed or modtool can't compile it
-Replace(
-"gml_Object_obj_tensionbar_Draw_0",
-@"@@try_hook@@(2224, 2272)
-if (global.tensionselect >= 0)
-    shit = 1
-@@try_unhook@@()",
-@""
-);
-
-Append(
-"gml_Object_obj_time_Create_0",
+var MainObj = new UndertaleGameObject();
+MainObj.Persistent = true;
+MainObj.Name = new UndertaleString("obj_textbox_counter");
+Data.GameObjects.Add(MainObj);
+Data.Strings.Add(MainObj.Name);
+MainObj.EventHandlerFor(EventType.Create, Data).ReplaceGML(
 @$"
 directory_create(""textstuff"");
 
@@ -45,8 +37,24 @@ else
         file_text_readln(read);
     }}
     file_text_close(read);
-}}
-"
+}}", Data);
+
+Append(
+@"gml_Object_obj_CHAPTER_SELECT_Create_0",
+@"if (!i_ex(obj_textbox_counter))
+    instance_create(0, 0, obj_textbox_counter);"
+);
+
+UseDebug();
+
+// very odd try catch hook that needs to be removed or modtool can't compile it
+Replace(
+"gml_Object_obj_tensionbar_Draw_0",
+@"@@try_hook@@(2224, 2272)
+if (global.tensionselect >= 0)
+    shit = 1
+@@try_unhook@@()",
+@""
 );
 
 ImportGMLString(
@@ -572,8 +580,8 @@ void UseDebug ()
     }"
     );
 
-    Append("gml_Object_obj_time_Draw_0", @$"
+    MainObj.EventHandlerFor(EventType.Draw, Data).ReplaceGML(@$"
     draw_set_color(c_white);
     debug_draw_text(20, 0, ""global.read_total: "" + string(global.read_total));
-    ");
+    ", Data);
 }
