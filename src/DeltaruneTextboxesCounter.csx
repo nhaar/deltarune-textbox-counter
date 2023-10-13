@@ -308,6 +308,18 @@ ImportGMLString(
 //
 
 Replace(
+"gml_GlobalScript_scr_84_get_lang_string_ch1",
+@"function scr_84_get_lang_string_ch1(argument0) //gml_Script_scr_84_get_lang_string_ch1
+{
+    return ds_map_find_value(global.lang_map, argument0);
+}",
+@"function scr_84_get_lang_string_ch1(argument0) //gml_Script_scr_84_get_lang_string_ch1
+{
+    return burn_text_id(ds_map_find_value(global.lang_map, argument0), argument0, 1);
+}"
+);
+
+Replace(
 @"gml_GlobalScript_msgset",
 @"function msgset(argument0, argument1) //gml_Script_msgset
 {
@@ -397,6 +409,20 @@ ImportGMLString(
 
 // take care of everything in obj_writer
 
+// ch1
+Place(
+"gml_Object_obj_writer_ch1_Create_0",
+"specfade = 1",
+"global.msg[0] = clean_text_string(global.msg[0])"
+);
+
+Replace(
+"gml_GlobalScript_scr_nextmsg_ch1",
+"mystring = nstring[msgno]",
+"mystring = clean_text_string(nstring[msgno])"
+);
+
+// ch2
 Place(
 "gml_Object_obj_writer_Create_0",
 "miniface_drawn = 0",
@@ -460,12 +486,12 @@ foreach (string stringFunction in StringFunctions.Keys)
     CreateNewFunction(stringFunction, StringFunctions[stringFunction], false);
 }
 
-UndertaleCode[] Ch2Code = Data.Code.Where(c => c.ParentEntry == null && !c.Name.Content.Contains("ch1")).ToArray();
+UndertaleCode[] AllCode = Data.Code.Where(c => c.ParentEntry == null).ToArray();
 List<UndertaleCode> ToUpdate = new();
 ConcurrentDictionary<string, string> UpdatedCode = new();
 
 
-SetProgressBar(null, "Replacing Functions", 0, Ch2Code.Length);
+SetProgressBar(null, "Replacing Functions", 0, AllCode.Length);
 StartProgressBarUpdater();
 await ReplaceDrawFunctions();
 await StopProgressBarUpdater();
@@ -483,7 +509,7 @@ foreach (UndertaleCode code in ToUpdate)
 
 async Task ReplaceDrawFunctions ()
 {
-    await Parallel.ForEachAsync(Ch2Code, async (Ch2Code, cancellationToken) => ReplaceDrawFunctions(Ch2Code));
+    await Parallel.ForEachAsync(AllCode, async (AllCode, cancellationToken) => ReplaceDrawFunctions(AllCode));
 }
 
 void ReplaceDrawFunctions (UndertaleCode code)
@@ -565,7 +591,12 @@ void CreateNewFunction (string functionName, int[] argsInfo, bool append)
 
 void UseDebug ()
 {
-    // enable debug mode
+    // debug mode ch1
+    Data.Code.ByName("gml_GlobalScript_scr_debug_ch1").ReplaceGML(@"
+    function scr_debug_ch1() { return true; }
+    ", Data);
+
+    // enable debug mode ch2
     Replace("gml_GlobalScript_scr_gamestart", "global.debug = false", "global.debug = true");
     Replace("gml_Object_obj_cutscene_master_Draw_64", "global.debug == true", "0");
 
