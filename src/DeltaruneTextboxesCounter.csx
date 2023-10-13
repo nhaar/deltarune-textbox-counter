@@ -287,10 +287,11 @@ string Delimiter = "AJ";
 
 ImportGMLString(
 "burn_text_id",
-@$"function burn_text_id(argument0, argument1)
+@$"function burn_text_id(argument0, argument1, argument2)
 {{
     var str = argument0
     var localized_string_id = argument1
+    var chapter = argument2
     var delimiter = ""{Delimiter}""
     var suffix
     if (is_undefined(localized_string_id))
@@ -299,7 +300,7 @@ ImportGMLString(
     }}
     else
     {{
-        suffix = delimiter + localized_string_id + delimiter
+        suffix = delimiter + localized_string_id + ""_ch"" + string(chapter) + delimiter
     }}
     return (str + suffix);
 }}"
@@ -329,7 +330,7 @@ Replace(
 @"function msgset(argument0, argument1, argument2) //gml_Script_msgset
 {
     global.msgno = argument0
-    global.msg[argument0] = burn_text_id(argument1, argument2)
+    global.msg[argument0] = burn_text_id(argument1, argument2, 2)
 }"
 );
 
@@ -341,7 +342,7 @@ Replace(
 }",
 @"function stringset(argument0, argumen1) //gml_Script_stringset
 {
-    return burn_text_id(argument0, argument1);
+    return burn_text_id(argument0, argument1, 2);
 }"
 );
 
