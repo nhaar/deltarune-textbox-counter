@@ -1,0 +1,1 @@
+// File contains all text that is only in the Japanese version (in chapter 2)
