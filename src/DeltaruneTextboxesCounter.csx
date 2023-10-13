@@ -39,6 +39,23 @@ else
     file_text_close(read);
 }}", Data);
 
+ImportGMLString(
+"counter_draw_text",
+@"function counter_draw_text(argument0, argument1, argument2)
+{
+    draw_set_font(fnt_main);
+    draw_set_color(c_white);
+    var xpos = argument0
+    var ypos = argument1
+    var str = argument2
+    draw_text((__view_get((0 << 0), 0) + xpos), (__view_get((1 << 0), 0) + ypos), str)
+}"
+);
+
+MainObj.EventHandlerFor(EventType.Draw, Data).ReplaceGML(@$"
+counter_draw_text(20, 0, ""Text total: "" + string(global.read_total));
+", Data);
+
 Append(
 @"gml_Object_obj_CHAPTER_SELECT_Create_0",
 @"if (!i_ex(obj_textbox_counter))
@@ -616,20 +633,4 @@ void UseDebug ()
     // enable debug mode ch2
     Replace("gml_GlobalScript_scr_gamestart", "global.debug = false", "global.debug = true");
     Replace("gml_Object_obj_cutscene_master_Draw_64", "global.debug == true", "0");
-
-    ImportGMLString(
-    "debug_draw_text",
-    @"function debug_draw_text(argument0, argument1, argument2)
-    {
-        var xpos = argument0
-        var ypos = argument1
-        var str = argument2
-        draw_text((__view_get((0 << 0), 0) + xpos), (__view_get((1 << 0), 0) + ypos), str)
-    }"
-    );
-
-    MainObj.EventHandlerFor(EventType.Draw, Data).ReplaceGML(@$"
-    draw_set_color(c_white);
-    debug_draw_text(20, 0, ""global.read_total: "" + string(global.read_total));
-    ", Data);
 }
