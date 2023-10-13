@@ -19,22 +19,28 @@ var langFolder = Path.Combine(Path.GetDirectoryName(FilePath), "lang");
 /// </summary>
 /// <returns></returns>
 // for some reason, the read only spans and utf8jsonreader only will work inside a function and not in the global scope
-List<string> GetLangJP()
+Dictionary<string, string> GetLangJP ()
 {
-    ReadOnlySpan<byte> fileBytes = File.ReadAllBytes(Path.Combine(langFolder, "lang_ja.json"));
+    ReadOnlySpan<byte> fileBytes = File.ReadAllBytes(Path.Combine(langFolder, $"lang_ja.json"));
     var reader = new Utf8JsonReader(fileBytes);
-    List<string> langJP = new();
+    Dictionary<string, string> langJP = new();
 
+    var lastProperty = "";
     while (reader.Read())
     {
-        // only need the keys
-        if (reader.TokenType == JsonTokenType.PropertyName)
+        switch (reader.TokenType)
         {
-            langJP.Add(reader.GetString());
+            case JsonTokenType.PropertyName:
+                lastProperty = reader.GetString();
+                break;
+            case JsonTokenType.String:
+                langJP[lastProperty] = reader.GetString();
+                break;
         }
     }
     return langJP;
 }
+
 
 var langJP = GetLangJP();
 
@@ -54,7 +60,7 @@ await SearchInCode();
 // the legendary one pipis textbox that has a pagebreak (bug)
 langEN["obj_pipis_enemy_slash_Step_0_gml_97_0"] = langEN["obj_pipis_enemy_slash_Step_0_gml_97_0"].TrimStart('\f');
 
-foreach (string textCode in langJP)
+foreach (string textCode in langJP.Keys)
 {
     if (langEN.ContainsKey(textCode))
     {
@@ -74,15 +80,15 @@ if (ScriptQuestion("Would you like to export the deprecated keys?"))
 {
     var unused = new List<string>();
 
-    foreach (string textCode in langJP)
+    foreach (string textCode in langJP.Keys)
     {
         if (!langEN.ContainsKey(textCode))
         {
-            unused.Add(textCode);
+            unused.Add(textCode + " //" + langJP[textCode]);
         }
     }
 
-    File.WriteAllLines(Path.Combine(langFolder, "deprecated.txt"), unused);
+    File.WriteAllLines(Path.Combine(langFolder, "deprecated_ch2.txt"), unused);
 }
 
 ScriptMessage("Chapter 2 text fully exported!");
@@ -141,7 +147,7 @@ void SearchInCode (UndertaleCode code)
     for (int i = 0; i < codeLines.Length; i++)
     {
         var line = codeLines[i];
-        foreach (string textCode in langJP)
+        foreach (string textCode in langJP.Keys)
         {
             // do it in this loop since it will be decremented in here
             if (possibleCodeCount[i] == 0)
