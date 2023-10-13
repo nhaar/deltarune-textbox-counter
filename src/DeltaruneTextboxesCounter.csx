@@ -438,7 +438,9 @@ foreach (UndertaleCode code in ToUpdate)
 {
     Console.WriteLine(code.Name.Content);
     Console.WriteLine("");
+    OutputCode(UpdatedCode[code.Name.Content]);
     code.ReplaceGML(UpdatedCode[code.Name.Content], Data);
+
 }
 
 async Task ReplaceDrawFunctions ()
