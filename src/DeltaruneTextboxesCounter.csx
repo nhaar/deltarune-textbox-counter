@@ -353,7 +353,11 @@ Replace(
 // go to every draw function and replace it!
 Dictionary<string, int[]> DrawFunctions = new()
 {
-    { "draw_text_shadow", new[] { 2, 3 } }
+    { "draw_text_shadow", new[] { 2, 3 } },
+    { "draw_text_transformed", new[] { 2, 6 } },
+    { "draw_text_width", new[] { 2, 4 } },
+    { "draw_text", new[] { 2, 3 } },
+    { "draw_text_colour", new[] { 2, 8 } }
 };
 
 foreach (string drawFunction in DrawFunctions.Keys)
