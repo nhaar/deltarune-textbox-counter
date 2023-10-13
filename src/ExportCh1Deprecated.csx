@@ -56,13 +56,6 @@ foreach (string textId in langEN)
         deprecated.Add(textId);
 }
 
-var union = langJP.Concat(langEN).ToList();
-foreach (string textId in union)
-{
-    if (!langJP.Contains(textId) || !langEN.Contains(textId))
-        deprecated.Add(textId)
-}
-
 File.WriteAllLines(Path.Combine(langFolder, "deprecated_ch1.txt"), deprecated);
 
 void CheckCode (UndertaleCode code)
