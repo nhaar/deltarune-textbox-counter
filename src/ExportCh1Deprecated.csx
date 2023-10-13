@@ -10,18 +10,23 @@ ThreadLocal<GlobalDecompileContext> DECOMPILE_CONTEXT = new ThreadLocal<GlobalDe
 
 var langFolder = Path.Combine(Path.GetDirectoryName(FilePath), "lang");
 
-List<string> GetLang(string langName)
+Dictionary<string, string> GetLang(string langName)
 {
     ReadOnlySpan<byte> fileBytes = File.ReadAllBytes(Path.Combine(langFolder, $"lang_{langName}.json"));
     var reader = new Utf8JsonReader(fileBytes);
-    List<string> lang = new();
+    Dictionary<string, string> lang = new();
 
+    var lastProperty = "";
     while (reader.Read())
     {
-        // only need the keys
-        if (reader.TokenType == JsonTokenType.PropertyName)
+        switch (reader.TokenType)
         {
-            lang.Add(reader.GetString());
+            case JsonTokenType.PropertyName:
+                lastProperty = reader.GetString();
+                break;
+            case JsonTokenType.String:
+                lang[lastProperty] = reader.GetString();
+                break;
         }
     }
     return lang;
@@ -29,8 +34,6 @@ List<string> GetLang(string langName)
 
 var langJP = GetLang("ja_ch1");
 var langEN = GetLang("en_ch1");
-
-Console.WriteLine(langJP.Count);
 
 var foundJP = new ConcurrentBag<string>();
 var foundEN = new ConcurrentBag<string>();
@@ -44,16 +47,27 @@ await StopProgressBarUpdater();
 
 var deprecated = new HashSet<string>();
 
-foreach (string textId in langJP)
+foreach (string textId in langJP.Keys)
 {
     if (!foundJP.Contains(textId))
-        deprecated.Add(textId);
+    {
+        var text = "";
+        try
+        {
+            text = langEN[textId];
+        }
+        catch (System.Exception)
+        {
+            text = langJP[textId];
+        }
+        deprecated.Add(textId + " //" + text);
+    }
 }
 
-foreach (string textId in langEN)
+foreach (string textId in langEN.Keys)
 {
     if (!foundEN.Contains(textId))
-        deprecated.Add(textId);
+        deprecated.Add(textId + " //" + langEN[textId]);
 }
 
 File.WriteAllLines(Path.Combine(langFolder, "deprecated_ch1.txt"), deprecated);
@@ -61,12 +75,12 @@ File.WriteAllLines(Path.Combine(langFolder, "deprecated_ch1.txt"), deprecated);
 void CheckCode (UndertaleCode code)
 {
     var decompiled = Decompiler.Decompile(code, DECOMPILE_CONTEXT.Value);
-    foreach (string textId in langJP)
+    foreach (string textId in langJP.Keys)
     {
         if (decompiled.Contains($"\"{textId}\""))
             foundJP.Add(textId);
     }
-    foreach (string textId in langEN)
+    foreach (string textId in langEN.Keys)
     {
         if (decompiled.Contains($"\"{textId}\""))
             foundEN.Add(textId);
