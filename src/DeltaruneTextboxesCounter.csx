@@ -348,23 +348,35 @@ Replace(
 
 ImportGMLString(
 "clean_text_string",
-@$"function clean_text_string(argument0)
+@$"function clean_text_string(argument0, argument1)
 {{
     var str = argument0
+    var cancel_append = argument1
     var delimiter = ""{Delimiter}""
 
     var start_index = string_pos(delimiter, str)
-    var before_delimiter, rest, end_index, after_delimiter
+    var before_delimiter, rest, end_index, after_delimiter, between_delimiters
     while (start_index > 0)
     {{
         before_delimiter = string_copy(str, 1, (start_index - 1))
         rest = string_copy(str, (start_index + string_length(delimiter)), string_length(str))
+        between_delimiters = string_copy(rest, 1, string_length(rest) - string_length(delimiter))
+        if (cancel_append != false)
+            append_text_line(between_delimiters)
         end_index = string_pos(delimiter, rest)
         after_delimiter = string_copy(rest, (end_index + string_length(delimiter)), string_length(str))
         str = before_delimiter + after_delimiter
         start_index = string_pos(delimiter, str)
     }}
     return str;
+}}"
+);
+
+ImportGMLString(
+"new_string_width",
+@$"function new_string_width(argument0)
+{{
+    return string_width(clean_text_string(argument0, true));
 }}"
 );
 
@@ -451,6 +463,16 @@ void ReplaceDrawFunctions (UndertaleCode code)
             update = true;
             codeContent = drawFunctionRegex.Replace(codeContent, $"new_{drawFunction}");
         }
+    }
+
+    var newStringWidthRegex = new Regex(@"\bstring_width\b");
+    if (
+        newStringWidthRegex.IsMatch(codeContent) &&
+        code.Name.Content != "new_string_width"
+    )
+    {
+        update = true;
+        codeContent = newStringWidthRegex.Replace(codeContent, "new_string_width");
     }
 
     if (update)
