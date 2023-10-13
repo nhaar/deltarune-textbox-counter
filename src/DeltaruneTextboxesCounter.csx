@@ -416,6 +416,8 @@ Dictionary<string, int[]> DrawFunctions = new()
     { "draw_text_transformed", new[] { 2, 6 } },
     { "draw_text_width", new[] { 2, 4 } },
     { "draw_text", new[] { 2, 3 } },
+    // required for colored monster names
+    { "draw_text_colour", new[] { 2, 8 } },
 };
 
 Dictionary<string, int[]> StringFunctions = new()
