@@ -9,6 +9,16 @@ ThreadLocal<GlobalDecompileContext> DECOMPILE_CONTEXT = new ThreadLocal<GlobalDe
 
 UseDebug();
 
+// very odd try catch hook that needs to be removed or modtool can't compile it
+Replace(
+"gml_Object_obj_tensionbar_Draw_0",
+@"@@try_hook@@(2224, 2272)
+if (global.tensionselect >= 0)
+    shit = 1
+@@try_unhook@@()",
+@""
+);
+
 Replace(
 "gml_GlobalScript_msgnextloc",
 @"function msgnextloc(argument0, argument1) //gml_Script_msgnextloc
