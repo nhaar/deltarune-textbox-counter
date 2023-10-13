@@ -463,6 +463,22 @@ Dictionary<string, int[]> StringFunctions = new()
 Dictionary<string, string[]> ExceptionalCalls = new()
 {
     {
+        // asterskip is this character that gets used a lot in ch1
+        "gml_GlobalScript_scr_asterskip_ch1",
+        new[]
+        {
+            "scr_84_get_lang_string_ch1(\"scr_asterskip_slash_scr_asterskip_gml_4_0\")"
+        }
+    },
+    {
+        // this also has something to do with an asterisk character
+        "gml_Object_obj_writer_ch1_Draw_0",
+        new []
+        {
+            "scr_84_get_lang_string_ch1(\"obj_writer_slash_Draw_0_gml_147_0\")"
+        }
+    },
+    {
         "gml_Object_obj_ch2_keyboardpuzzle_controller_Create_0",
         new[]
         {
