@@ -488,6 +488,11 @@ void OutputCode (string code)
     File.WriteAllText(FilePath + "/../test.txt", code);
 }
 
+void Append (string codeName, string code)
+{
+    Data.Code.ByName(codeName).AppendGML(code, Data);
+}
+
 void Replace (string codeName, string text, string replacement)
 {
     OutputCode(replacement);
