@@ -50,7 +50,7 @@ else
 );
 
 ImportGMLString(
-"append_text_line.gml"
+"append_text_line.gml",
 @"function append_text_line (argument0)
 {
     var line = argument0;
