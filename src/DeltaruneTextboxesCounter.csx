@@ -435,6 +435,19 @@ Dictionary<string, int[]> StringFunctions = new()
 
 Dictionary<string, string[]> ExceptionalCalls = new()
 {
+    {
+        "gml_Object_obj_ch2_keyboardpuzzle_controller_Create_0",
+        new[]
+        {
+            "stringsetloc(\"APPLE\", \"obj_ch2_keyboardpuzzle_controller_slash_Create_0_gml_11_0\")",
+            "stringsetloc(\"AGREE2ALL\", \"obj_ch2_keyboardpuzzle_controller_slash_Create_0_gml_12_0\")",
+            "stringsetloc(\"GIAEEFSBISSFLBALAELRHEIGSFFEBRSI\", \"obj_ch2_keyboardpuzzle_controller_slash_Create_0_gml_38_0\")",
+            "stringsetloc(\"GIASFELFEBREHBER\", \"obj_ch2_keyboardpuzzle_controller_slash_Create_0_gml_46_0\")",
+            "stringsetloc(\"UPIOMAOIOTSUGNINMGUSIFIOPEKIFUSIORATEGUI\", \"obj_ch2_keyboardpuzzle_controller_slash_Create_0_gml_56_0\")",
+            "stringsetloc(\"SUFUGIOROTENIPEKENAMO\", \"obj_ch2_keyboardpuzzle_controller_slash_Create_0_gml_59_0\")",
+
+        }
+    }
 };
 
 foreach (string drawFunction in DrawFunctions.Keys)
