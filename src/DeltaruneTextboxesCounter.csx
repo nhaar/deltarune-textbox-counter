@@ -483,19 +483,23 @@ void ReplaceDrawFunctions (UndertaleCode code)
     var codeContent = Decompiler.Decompile(code, DECOMPILE_CONTEXT.Value);
     var update = false;
 
-    var newFunctions = DrawFunctions.Keys.Union(StringFunctions.Keys);
-    foreach (string function in newFunctions)
-    {   
-        var functionRegex = new Regex($@"\b{function}\b");
-        if (
-            functionRegex.IsMatch(codeContent) &&
-            code.Name.Content != $"gml_GlobalScript_{function}" &&
-            code.Name.Content != $"new_{function}" &&
-            code.Name.Content != "clean_text_string" // avoid (infinite) circular call
-        )
+    var newFunctions = DrawFunctions.Keys.Union(StringFunctions.Keys).ToList();
+    // replace function names in assembly for old ones
+    for (int i = 0; i < code.Instructions.Count; i++) 
+    {
+        if (code.Instructions[i].Kind == UndertaleInstruction.Opcode.Call)
         {
-            update = true;
-            codeContent = functionRegex.Replace(codeContent, $"new_{function}");
+            var functionName = code.Instructions[i].Function.ToString();
+            if
+            (
+                newFunctions.Contains(functionName) &&
+                code.Name.Content != $"gml_GlobalScript_{functionName}" &&
+                code.Name.Content != $"new_{functionName}" &&
+                code.Name.Content != "clean_text_string" // avoid (infinite) circular call
+            )
+            {
+                code.Instructions[i].Function = new UndertaleInstruction.Reference<UndertaleFunction>(Data.Functions.ByName($"gml_Script_new_{functionName}"));
+            }
         }
     }
     var exceptionalCalls = ExceptionalCalls.ContainsKey(code.Name.Content) ? ExceptionalCalls[code.Name.Content] : new string[0];
