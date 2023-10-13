@@ -427,8 +427,10 @@ Dictionary<string, int[]> DrawFunctions = new()
 Dictionary<string, int[]> StringFunctions = new()
 {
     // initially required for displaying enemy names with proper width in battle
-    { "string_width", new[] { 0, 1 } }
-};
+    { "string_width", new[] { 0, 1 } },
+    // these two were initially required for spelling bee
+    { "string_length", new[] { 0, 1 } },
+    { "string_char_at", new[] { 0, 2 } }
 };
 
 foreach (string drawFunction in DrawFunctions.Keys)
@@ -479,7 +481,8 @@ void ReplaceDrawFunctions (UndertaleCode code)
         if (
             functionRegex.IsMatch(codeContent) &&
             code.Name.Content != $"gml_GlobalScript_{function}" &&
-            code.Name.Content != $"new_{function}"
+            code.Name.Content != $"new_{function}" &&
+            code.Name.Content != "clean_text_string" // avoid (infinite) circular call
         )
         {
             update = true;
