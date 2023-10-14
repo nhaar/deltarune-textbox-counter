@@ -1,1 +1,6 @@
 // File contains all text that is unused in Chapter 1
+// this key was used for debugging purposes during development as far as I can tell
+date
+
+// was supposed to play at the start of CH1, but gets cut off by the heart animation
+DEVICE_CONTACT_slash_Step_0_gml_8_0 
