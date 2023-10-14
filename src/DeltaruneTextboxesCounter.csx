@@ -425,6 +425,16 @@ ImportGMLString(
 }}"
 );
 
+ImportGMLString(
+"new_eq",
+@"function new_eq(argument0, argument1)
+{
+    var var1 = is_string(argument0) ? clean_text_string(argument0) : argument0
+    var var2 = is_string(argument1) ? clean_text_string(argument1) : argument1
+    return (var1 == var2);
+}"
+);
+
 // take care of everything in obj_writer
 
 // ch1
@@ -553,6 +563,11 @@ void ReplaceDrawFunctions (UndertaleCode code)
 
     var newFunctions = DrawFunctions.Keys.Union(StringFunctions.Keys).ToList();
     // replace function names in assembly for old ones
+    var needConverting = new List<int>();
+    var needRemoving = new List<int>();
+    var argConverting = new Dictionary<int, int>();
+    var convertPush = new List<int>();
+    bool isFirst = true;
     for (int i = 0; i < code.Instructions.Count; i++) 
     {
         if (code.Instructions[i].Kind == UndertaleInstruction.Opcode.Call)
@@ -569,18 +584,123 @@ void ReplaceDrawFunctions (UndertaleCode code)
                 code.Instructions[i].Function = new UndertaleInstruction.Reference<UndertaleFunction>(Data.Functions.ByName($"gml_Script_new_{functionName}"));
             }
         }
-    }
-    if (ExceptionalCalls.ContainsKey(code.Name.Content))
-    {        
-        var codeContent = Decompiler.Decompile(code, DECOMPILE_CONTEXT.Value);
-        var exceptionalCalls = ExceptionalCalls[code.Name.Content];
-        foreach (string call in exceptionalCalls)
+        // replacing EQ calls with the new_eq function
+        else if
+        (
+            code.Instructions[i].Kind == UndertaleInstruction.Opcode.Cmp &&
+            code.Instructions[i].ComparisonKind == UndertaleInstruction.ComparisonType.EQ &&
+            (code.Instructions[i].Type1 == UndertaleInstruction.DataType.Variable ||code.Instructions[i].Type1 == UndertaleInstruction.DataType.String) &&
+            (code.Instructions[i].Type2 == UndertaleInstruction.DataType.Variable ||code.Instructions[i].Type2 == UndertaleInstruction.DataType.String) &&
+            code.Name.Content != "new_eq"
+        )
         {
-            codeContent = codeContent.Replace(call, $"clean_text_string({call}, 1)");
+            isFirst = false;
+            if (code.Instructions[i].Type1 != UndertaleInstruction.DataType.Variable)
+            {
+                Console.WriteLine(i);
+                if (!argConverting.ContainsKey(i))
+                    argConverting[i] = 0;
+                
+                argConverting[i]++;
+            }
+            if
+            (
+                code.Instructions[i + 1].Kind == UndertaleInstruction.Opcode.Conv &&
+                code.Instructions[i + 1].Type1 == UndertaleInstruction.DataType.Boolean &&
+                code.Instructions[i + 1].Type2 == UndertaleInstruction.DataType.Variable
+            )
+            {
+                needRemoving.Add(i + 1);
+            }
+            else {
+                needConverting.Add(i);
+            }
+            code.Instructions[i].Kind = UndertaleInstruction.Opcode.Call;
+            code.Instructions[i].Function = new UndertaleInstruction.Reference<UndertaleFunction>(Data.Functions.ByName("gml_Script_new_eq"));
+            code.Instructions[i].Type1 = UndertaleInstruction.DataType.Int32;
+            code.Instructions[i].Type2 = UndertaleInstruction.DataType.Double;
+            code.Instructions[i].ArgumentsCount = 2;
         }
-        UpdatedCode[code.Name.Content] = codeContent;
-        ToUpdate.Add(code);
     }
+
+    var indexDisplacement = 0;
+    void updateDisplacement (int i, bool increment)
+    {
+        var newDict = new Dictionary<int, int>();
+        if (increment)
+            indexDisplacement++;
+        else
+            indexDisplacement--;
+
+        foreach (int key in argConverting.Keys)
+        {
+            if (key >= i)
+            {
+                newDict[key + 1] = argConverting[key];
+            }
+            else
+            {
+                newDict[key] = argConverting[key];
+            }
+        }
+        argConverting = newDict;
+    }
+
+
+    foreach (int i in needRemoving)
+    {
+        code.Instructions.RemoveAt(i + indexDisplacement);
+        updateDisplacement(i + indexDisplacement, false);
+    }
+    foreach (int i in needConverting)
+    {
+        UndertaleInstruction instr = new UndertaleInstruction();
+        instr.Kind = UndertaleInstruction.Opcode.Conv;
+        instr.Type1 = UndertaleInstruction.DataType.Variable;
+        instr.Type2 = UndertaleInstruction.DataType.Boolean;
+        code.Instructions.Insert(i + 1 + indexDisplacement, instr);
+        updateDisplacement(i + 1 + indexDisplacement, true);
+    }
+    foreach (int i in argConverting.Keys)
+    {
+        Console.WriteLine(i);
+        var total = argConverting[i];
+        var current = i;
+        while (current >= 0 && total > 0)
+        {
+
+            if (code.Instructions[current].Kind == UndertaleInstruction.Opcode.Push)
+            {
+
+                Console.WriteLine("found za boy");
+                convertPush.Add(current);
+                total--;
+            }
+            current--;
+        }
+    }
+    indexDisplacement = 0;
+    foreach (int i in convertPush)
+    {
+        Console.WriteLine(i);
+        UndertaleInstruction instr = new UndertaleInstruction();
+        instr.Kind = UndertaleInstruction.Opcode.Conv;
+        instr.Type1 = code.Instructions[i + indexDisplacement].Type1;
+        instr.Type2 = UndertaleInstruction.DataType.Variable;
+        code.Instructions.Insert(i + 1 + indexDisplacement, instr);
+        indexDisplacement++;
+    }
+    // if (ExceptionalCalls.ContainsKey(code.Name.Content))
+    // {        
+    //     var codeContent = Decompiler.Decompile(code, DECOMPILE_CONTEXT.Value);
+    //     var exceptionalCalls = ExceptionalCalls[code.Name.Content];
+    //     foreach (string call in exceptionalCalls)
+    //     {
+    //         codeContent = codeContent.Replace(call, $"clean_text_string({call}, 1)");
+    //     }
+    //     UpdatedCode[code.Name.Content] = codeContent;
+    //     ToUpdate.Add(code);
+    // }
     IncrementProgressParallel();
 }
 
