@@ -478,37 +478,61 @@ Dictionary<string, int[]> StringFunctions = new()
     { "string_char_at", new[] { 0, 2 } }
 };
 
-Dictionary<string, string[]> ExceptionalCalls = new()
+string AddAutoClear (string content, int startLine = 0, int endLine = 0)
 {
-    {
-        // asterskip is this character that gets used a lot in ch1
-        "gml_GlobalScript_scr_asterskip_ch1",
-        new[]
+    var functionsToClear = new[]
         {
-            "scr_84_get_lang_string_ch1(\"scr_asterskip_slash_scr_asterskip_gml_4_0\")"
-        }
-    },
+        "stringset", "scr_84_get_lang_string_ch1", "stringsetloc", "stringsetsubloc"
+    };
+    var lines = content.Split("\n");
+    if (endLine == 0)
+        endLine = lines.Length;
+    var finalContent = "";
+    for (int i = 0; i < lines.Length; i++)
     {
-        // this also has something to do with an asterisk character
-        "gml_Object_obj_writer_ch1_Draw_0",
-        new []
+        var newLine = "";
+        var line = lines[i];
+        if (i > startLine && i < endLine)
         {
-            "scr_84_get_lang_string_ch1(\"obj_writer_slash_Draw_0_gml_147_0\")"
+            bool found = false;
+            foreach (string function in functionsToClear)
+            {
+                if (Regex.IsMatch(line, @$"\b{function}\b"))
+                {
+                    int start = lines[i].IndexOf(function);
+                    int j = start + function.Length;
+                    int depth = 0;
+                    do
+                    {
+                        char c = lines[i][j];
+                        if (c == '(')
+                            depth++;
+                        else if (c == ')')
+                            depth--;
+                        j++;
+                    }
+                    while (depth > 0);
+                    finalContent += line.Substring(0, start) + "clean_text_string(" + line.Substring(start, j - start) + ", 1)" + line.Substring(j) + "\n";
+                    found = true;
+                    break;
+                }
+            }
+            if (!found)
+            {
+                finalContent += line + "\n";
+            }
         }
-    },
-    {
-        "gml_Object_obj_ch2_keyboardpuzzle_controller_Create_0",
-        new[]
-        {
-            "stringsetloc(\"APPLE\", \"obj_ch2_keyboardpuzzle_controller_slash_Create_0_gml_11_0\")",
-            "stringsetloc(\"AGREE2ALL\", \"obj_ch2_keyboardpuzzle_controller_slash_Create_0_gml_12_0\")",
-            "stringsetloc(\"GIAEEFSBISSFLBALAELRHEIGSFFEBRSI\", \"obj_ch2_keyboardpuzzle_controller_slash_Create_0_gml_38_0\")",
-            "stringsetloc(\"GIASFELFEBREHBER\", \"obj_ch2_keyboardpuzzle_controller_slash_Create_0_gml_46_0\")",
-            "stringsetloc(\"UPIOMAOIOTSUGNINMGUSIFIOPEKIFUSIORATEGUI\", \"obj_ch2_keyboardpuzzle_controller_slash_Create_0_gml_56_0\")",
-            "stringsetloc(\"SUFUGIOROTENIPEKENAMO\", \"obj_ch2_keyboardpuzzle_controller_slash_Create_0_gml_59_0\")",
-
-        }
+        else
+            finalContent += lines[i] + "\n";
     }
+    return finalContent;
+}
+
+string[] ExceptionEntries =
+{
+    "gml_GlobalScript_scr_asterskip_ch1",
+    "gml_Object_obj_writer_ch1_Draw_0",
+    "gml_Object_obj_ch2_keyboardpuzzle_controller_Create_0",
 };
 
 foreach (string drawFunction in DrawFunctions.Keys)
@@ -570,14 +594,10 @@ void ReplaceDrawFunctions (UndertaleCode code)
             }
         }
     }
-    if (ExceptionalCalls.ContainsKey(code.Name.Content))
+    if (ExceptionEntries.Contains(code.Name.Content))
     {        
         var codeContent = Decompiler.Decompile(code, DECOMPILE_CONTEXT.Value);
-        var exceptionalCalls = ExceptionalCalls[code.Name.Content];
-        foreach (string call in exceptionalCalls)
-        {
-            codeContent = codeContent.Replace(call, $"clean_text_string({call}, 1)");
-        }
+        codeContent = AddAutoClear(codeContent);
         UpdatedCode[code.Name.Content] = codeContent;
         ToUpdate.Add(code);
     }
