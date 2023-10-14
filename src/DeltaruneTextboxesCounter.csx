@@ -299,8 +299,8 @@ Replace(
 
 //
 
-// a two character pattern that is never used (with this capitalization)
-string Delimiter = "AJ";
+// a character pattern that can never used in a string (needs to be 13 char to account for possible names)
+string Delimiter = "KKKKKKKKKKKKK";
 
 ImportGMLString(
 "burn_text_id",
