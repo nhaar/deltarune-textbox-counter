@@ -533,6 +533,7 @@ string[] ExceptionEntries =
     "gml_GlobalScript_scr_asterskip_ch1",
     "gml_Object_obj_writer_ch1_Draw_0",
     "gml_Object_obj_ch2_keyboardpuzzle_controller_Create_0",
+    "gml_Object_DEVICE_CONTACT_ch1_Other_10"
 };
 
 foreach (string drawFunction in DrawFunctions.Keys)
