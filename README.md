@@ -4,6 +4,8 @@ Welcome the Deltarune (Chapters 1 & 2 DEMO) Textbox Counter!
 
 The mod is nearing completiong and can already be used, but it still needs to be tested and improved before the full release. Ask me (`nhaar` on discord) for updates.
 
+[DOWNLOAD BETA HERE](https://github.com/nhaar/deltarune-textbox-counter/releases/tag/v0.0.0-beta)
+
 # Installation guide
 To install the mod, you will need to have the Steam release, either version 1.10 (which is what you will have if you download it without changing the version) or version 1.15. Choose one of the patches in the releases, download it and apply it to the `data.win` for your game.
 
