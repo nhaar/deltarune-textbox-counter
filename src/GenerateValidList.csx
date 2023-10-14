@@ -1,35 +1,43 @@
 using System.Text.Json;
 using System.Linq;
 
+// in order to be valid, a textbox must:
+// 1. Not be deprecated -> chapter based
+// 2. Not be unused -> chapter based
+// 3. Not be empty in at least one language -> look at both languages
+
 var langFolder = Path.Combine(Path.GetDirectoryName(FilePath), "lang");
 
 var langList = Path.Combine(Path.GetDirectoryName(ScriptPath), "LangList");
 
-var ch1JP = GetJson(Path.Combine(langFolder, "lang_ja_ch1.json"));
-var ch2JP = GetJson(Path.Combine(langFolder, "lang_ja.json"));
-var ch1EN = GetJson(Path.Combine(langFolder, "lang_en_ch1.json"));
-var ch2EN = GetJson(Path.Combine(langFolder, "lang_en.json"));
-var deprecatedCh1 = GetFileTextList(Path.Combine(langFolder, "deprecated_ch1.txt"));
-var deprecatedCh2 = GetFileTextList(Path.Combine(langFolder, "deprecated.txt"));
-var unusedCh1 = GetFileTextList(Path.Combine(langList, "unused-ch1.txt"));
-var unusedCh2 = GetFileTextList(Path.Combine(langList, "unused-ch2.txt"));
+OutputValid("ch1", "_ch1");
+OutputValid("ch2", "");
 
-File.WriteAllLines(Path.Combine(langFolder, "valid_ch1.txt"), GetValidKeys(ch1JP, deprecatedCh1, unusedCh1, ch1EN));
-
-File.WriteAllLines(Path.Combine(langFolder, "valid_ch2.txt"), GetValidKeys(ch2JP, deprecatedCh2, unusedCh2, ch2EN));
-
-List<string> GetValidKeys (Dictionary<string, string> json, List<string> deprecated, List<string> unused, Dictionary<string, string> alt)
+void OutputValid (string chapterString, string langChapterString)
 {
-    var validKeys = new List<string>();
-    foreach (string key in json.Keys)
+    var langJP = GetJson(Path.Combine(langFolder, "lang_ja" + langChapterString + ".json"));
+    var langEN = GetJson(Path.Combine(langFolder, "lang_en" + langChapterString + ".json"));
+    var deprecated = GetFileTextList(Path.Combine(langFolder, "deprecated_" + chapterString + ".txt"));
+    var unused = GetFileTextList(Path.Combine(langList, "unused-" + chapterString + ".txt"));
+    var emptyJP = GetFileTextList(Path.Combine(langFolder, "empty_" + chapterString + "_ja.txt"));
+    var emptyEN = GetFileTextList(Path.Combine(langFolder, "empty_" + chapterString + "_en.txt"));
+
+    var allKeys = langEN.Concat(langJP.Where(kv => !langEN.ContainsKey(kv.Key))).ToDictionary(kv => kv.Key, kv => kv.Value).Keys.ToList();
+    var validKeys = new HashSet<string>();
+    foreach (string key in allKeys)
     {
-        if (!deprecated.Contains(key) && !unused.Contains(key))
+        if
+        (
+            !deprecated.Contains(key) &&
+            !unused.Contains(key) &&
+            (!emptyJP.Contains(key) || !emptyEN.Contains(key))
+        )
         {
-            var text = alt.ContainsKey(key) ? alt[key] : json[key];
+            var text = langEN.ContainsKey(key) ? langEN[key] : langJP[key];
             validKeys.Add(key + " //" + text);
         }
     }
-    return validKeys;
+    File.WriteAllLines(Path.Combine(langFolder, "valid_" + chapterString + ".txt"), validKeys);
 }
 
 Dictionary<string, string> GetJson (string filePath)
@@ -59,7 +67,7 @@ List<string> GetFileTextList (string filePath)
     var lines = File.ReadAllLines(filePath).ToList();
     var commentPattern = new Regex(@"(?<=^.*?)//.*$", RegexOptions.Multiline);
     lines = lines.Select(line => commentPattern.Replace(line, "")).ToList();
-    lines.Select(lines => lines.Trim());
+    lines = lines.Select(lines => lines.Trim()).ToList();
     lines.RemoveAll(line => line == "");
     return lines;
 }
