@@ -29,8 +29,8 @@ If you want to help beta testing, here's what you can do!
 
 # Turns Out I'm An Expert In Deltarune Secrets And Want To Help The Mod Even Though I Won't Code Anything
 
-Well you're in luck. Check out the guide on how to contribute with the text lists.
+Well you're in luck. See: [guide on how to contribute with the text lists](https://github.com/nhaar/deltarune-textbox-counter/wiki/Text-documenting).
 
 # Contributing
 
-Check the wiki for the documentation of the mod.
+See: [the wiki for the documentation of the mod](https://github.com/nhaar/deltarune-textbox-counter/wiki).
