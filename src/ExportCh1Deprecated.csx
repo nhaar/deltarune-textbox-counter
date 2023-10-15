@@ -1,78 +1,58 @@
+#load "DecompileContext.csx"
+#load "DeltarunePaths.csx"
+#load "GetLang.csx"
+
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Text.Json;
 
-EnsureDataLoaded();
-
-ThreadLocal<GlobalDecompileContext> DECOMPILE_CONTEXT = new ThreadLocal<GlobalDecompileContext>(() => new GlobalDecompileContext(Data, false));
-
-var langFolder = Path.Combine(Path.GetDirectoryName(FilePath), "lang");
-
-Dictionary<string, string> GetLang(string langName)
+async Task ExportCh1Deprecated ()
 {
-    ReadOnlySpan<byte> fileBytes = File.ReadAllBytes(Path.Combine(langFolder, $"lang_{langName}.json"));
-    var reader = new Utf8JsonReader(fileBytes);
-    Dictionary<string, string> lang = new();
+    var langJP = GetLang("ja_ch1");
+    var langEN = GetLang("en_ch1");
 
-    var lastProperty = "";
-    while (reader.Read())
+    var foundJP = new ConcurrentBag<string>();
+    var foundEN = new ConcurrentBag<string>();
+
+    List<UndertaleCode> ch1Code = Data.Code.Where(code => code.Name.Content.Contains("ch1") && code.ParentEntry == null).ToList();
+
+    SetProgressBar(null, "Extracting Text", 0, ch1Code.Count);
+    StartProgressBarUpdater();
+    await Parallel.ForEachAsync(ch1Code, async (code, cancellationToken) => CheckCode(code, langJP, langEN, foundJP, foundEN));
+    await StopProgressBarUpdater();
+
+    var deprecated = new HashSet<string>();
+
+    foreach (string textId in langJP.Keys)
     {
-        switch (reader.TokenType)
+        if (!foundJP.Contains(textId))
         {
-            case JsonTokenType.PropertyName:
-                lastProperty = reader.GetString();
-                break;
-            case JsonTokenType.String:
-                lang[lastProperty] = reader.GetString();
-                break;
+            var text = "";
+            try
+            {
+                text = langEN[textId];
+            }
+            catch (System.Exception)
+            {
+                text = langJP[textId];
+            }
+            deprecated.Add(textId + " //" + text);
         }
     }
-    return lang;
-}
 
-var langJP = GetLang("ja_ch1");
-var langEN = GetLang("en_ch1");
-
-var foundJP = new ConcurrentBag<string>();
-var foundEN = new ConcurrentBag<string>();
-
-List<UndertaleCode> ch1Code = Data.Code.Where(code => code.Name.Content.Contains("ch1") && code.ParentEntry == null).ToList();
-
-SetProgressBar(null, "Extracting Text", 0, ch1Code.Count);
-StartProgressBarUpdater();
-await CheckCode();
-await StopProgressBarUpdater();
-
-var deprecated = new HashSet<string>();
-
-foreach (string textId in langJP.Keys)
-{
-    if (!foundJP.Contains(textId))
+    foreach (string textId in langEN.Keys)
     {
-        var text = "";
-        try
-        {
-            text = langEN[textId];
-        }
-        catch (System.Exception)
-        {
-            text = langJP[textId];
-        }
-        deprecated.Add(textId + " //" + text);
+        if (!foundEN.Contains(textId))
+            deprecated.Add(textId + " //" + langEN[textId]);
     }
+
+    File.WriteAllLines(Path.Combine(langFolder, "deprecated_ch1.txt"), deprecated);
 }
 
-foreach (string textId in langEN.Keys)
-{
-    if (!foundEN.Contains(textId))
-        deprecated.Add(textId + " //" + langEN[textId]);
-}
 
-File.WriteAllLines(Path.Combine(langFolder, "deprecated_ch1.txt"), deprecated);
-
-void CheckCode (UndertaleCode code)
+void CheckCode (UndertaleCode code, Dictionary<string, string> langJP, Dictionary<string, string> langEN, ConcurrentBag<string> foundJP, ConcurrentBag<string> foundEN)
 {
     var decompiled = Decompiler.Decompile(code, DECOMPILE_CONTEXT.Value);
     foreach (string textId in langJP.Keys)
@@ -86,9 +66,4 @@ void CheckCode (UndertaleCode code)
             foundEN.Add(textId);
     }
     IncrementProgressParallel();
-}
-
-async Task CheckCode ()
-{
-    await Parallel.ForEachAsync(ch1Code, async (code, cancellationToken) => CheckCode(code));
 }

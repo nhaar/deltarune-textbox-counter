@@ -1,11 +1,11 @@
+#load "DecompileContext.csx"
+
 using System.Linq;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 
 EnsureDataLoaded();
-
-ThreadLocal<GlobalDecompileContext> DECOMPILE_CONTEXT = new ThreadLocal<GlobalDecompileContext>(() => new GlobalDecompileContext(Data, false));
 
 var functionsToClear = new[]
     {

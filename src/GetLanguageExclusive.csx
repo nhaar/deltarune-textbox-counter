@@ -1,72 +1,39 @@
-using System.Text.Json;
+#load "DecompileContext.csx"
+#load "DeltarunePaths.csx"
+#load "DeltaruneConstants.csx"
+#load "GetLang.csx"
 
-var langFolder = Path.Combine(Path.GetDirectoryName(FilePath), "lang");
+using System.Linq;
 
-var jpCh1 = GetLang("ja_ch1");
-var jpCh2 = GetLang("ja");
-var enCh1 = GetLang("en_ch1");
-var enCh2 = GetLang("en");
-
-var ch1EnOnly = new HashSet<string>();
-var ch2EnOnly = new HashSet<string>();
-var ch1JpOnly = new HashSet<string>();
-var ch2JpOnly = new HashSet<string>();
-
-foreach (string textId in enCh1.Keys)
+void GetLanguageExclusive()
 {
-    if (!jpCh1.ContainsKey(textId))
+    foreach (Chapter chapter in Enum.GetValues(typeof(Chapter)))
     {
-        ch1EnOnly.Add(textId + " //" + enCh1[textId]);
+        GetChapterLanguageExclusive(chapter);
     }
 }
 
-foreach (string textId in enCh2.Keys)
+void GetChapterLanguageExclusive (Chapter chapter)
 {
-    if (!jpCh2.ContainsKey(textId))
+    var langs = new Dictionary<string, Dictionary<string, string>>();
+    foreach (Lang lang in Enum.GetValues(typeof(Lang)))
     {
-        ch2EnOnly.Add(textId + " //" + enCh2[textId]);
+        langs[GetLangName(lang)] = GetLang(GetLangName(lang) + GetLangFileName(chapter));
     }
-}
 
-foreach (string textId in jpCh1.Keys)
-{
-    if (!enCh1.ContainsKey(textId))
-    {
-        ch1JpOnly.Add(textId + " //" + jpCh1[textId]);
-    }
-}
-
-foreach (string textId in jpCh2.Keys)
-{
-    if (!enCh2.ContainsKey(textId))
-    {
-        ch2JpOnly.Add(textId + " //" + jpCh2[textId]);
-    }
-}
-
-File.WriteAllLines(Path.Combine(langFolder, "only_jp_ch1.txt"), ch1EnOnly);
-File.WriteAllLines(Path.Combine(langFolder, "only_en_ch1.txt"), ch1JpOnly);
-File.WriteAllLines(Path.Combine(langFolder, "only_en_ch2.txt"), ch2EnOnly);
-File.WriteAllLines(Path.Combine(langFolder, "only_jp_ch2.txt"), ch2JpOnly);
-
-Dictionary<string, string> GetLang(string langName)
-{
-    ReadOnlySpan<byte> fileBytes = File.ReadAllBytes(Path.Combine(langFolder, $"lang_{langName}.json"));
-    var reader = new Utf8JsonReader(fileBytes);
-    Dictionary<string, string> lang = new();
-
-    var lastProperty = "";
-    while (reader.Read())
-    {
-        switch (reader.TokenType)
+    foreach (string lang in langs.Keys)
+    {   
+        var thisLang = langs[lang];
+        var languageOnly = new HashSet<string>();
+        var otherLang = langs.Where(l => l.Key != lang).First().Key;
+        foreach (string textId in thisLang.Keys)
         {
-            case JsonTokenType.PropertyName:
-                lastProperty = reader.GetString();
-                break;
-            case JsonTokenType.String:
-                lang[lastProperty] = reader.GetString();
-                break;
+            if (!langs[otherLang].ContainsKey(textId))
+            {
+                languageOnly.Add(textId + " //" + thisLang[textId]);
+            }
         }
+
+        File.WriteAllLines(Path.Combine(langFolder, $"only_{lang}_{GetChapterFileName(chapter)}.txt"), languageOnly);
     }
-    return lang;
 }
