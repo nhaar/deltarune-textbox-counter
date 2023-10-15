@@ -1,6 +1,6 @@
 #load "..\Lib\DecompileContext.csx"
+#load "LangFile.csx"
 #load "DeltarunePaths.csx"
-#load "GetLang.csx"
 
 using System.Text.Json;
 using System.Threading;
@@ -10,11 +10,10 @@ using System.Collections.Concurrent;
 using System.Collections.Specialized;
 using System.Text.Encodings.Web;
 
-
-async Task ExportEnData ()
+async Task ExportCh2EnData ()
 {
 
-    var langJP = GetLang("ja");
+    var langJP = GetDeltaruneLangFile(Chapter.Chapter2, Lang.JP);
     var langEN = new ConcurrentDictionary<string, string>();
 
     // just to order the language back to the original order
@@ -24,9 +23,20 @@ async Task ExportEnData ()
     // don't know why ParentEntry needs to be null, but that's how it was in the ExportAllCode.csx script
     List<UndertaleCode> ch2Code = Data.Code.Where(code => !code.Name.Content.Contains("ch1") && code.ParentEntry == null).ToList();
 
-    SetProgressBar(null, "Extracting Text", 0, ch2Code.Count);
+    SetProgressBar(null, "Extracting Chapter 2 Text", 0, ch2Code.Count);
     StartProgressBarUpdater();
-    await Parallel.ForEachAsync(ch2Code, async (code, cancellationToken) => SearchInCode(code, langJP, langEN));
+    while (true)
+    {
+        try
+        {
+            await Parallel.ForEachAsync(ch2Code, async (code, cancellationToken) => SearchInCode(code, langJP, langEN));
+            break;
+        }
+        catch (System.Exception)
+        {            
+        }
+
+    }
     await StopProgressBarUpdater();
 
     // the legendary one pipis textbox that has a pagebreak (bug)
@@ -47,23 +57,6 @@ async Task ExportEnData ()
     });
 
     File.WriteAllText(Path.Combine(langFolder, "lang_en.json"), jsonString);
-
-    if (ScriptQuestion("Would you like to export the deprecated keys?"))
-    {
-        var unused = new List<string>();
-
-        foreach (string textCode in langJP.Keys)
-        {
-            if (!langEN.ContainsKey(textCode))
-            {
-                unused.Add(textCode + " //" + langJP[textCode]);
-            }
-        }
-
-        File.WriteAllLines(Path.Combine(langFolder, "deprecated_ch2.txt"), unused);
-    }
-
-    ScriptMessage("Chapter 2 text fully exported!");
 }
 
 

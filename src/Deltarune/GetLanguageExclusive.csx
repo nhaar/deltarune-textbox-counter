@@ -2,7 +2,7 @@
 #load "..\Lib\AddCommentToId.csx"
 #load "DeltarunePaths.csx"
 #load "DeltaruneConstants.csx"
-#load "GetLang.csx"
+#load "LangFile.csx"
 
 using System.Linq;
 
@@ -20,7 +20,7 @@ void GetChapterLanguageExclusive (Chapter chapter)
     var langTypes = (Lang[])Enum.GetValues(typeof(Lang));
     foreach (Lang lang in langTypes)
     {
-        langs.Add(GetLang(GetLangName(lang) + GetLangFileName(chapter)));
+        langs.Add(GetDeltaruneLangFile(chapter, lang));
     }
 
     var sets = GetJsonExclusive(langs.ToArray());

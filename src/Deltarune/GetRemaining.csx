@@ -1,7 +1,7 @@
 #load "DeltarunePaths.csx"
 #load "DeltaruneConstants.csx"
-#load "GetLang.csx"
 #load "..\Lib\TextList.csx"
+#load "LangFile.csx"
 
 using System.Linq;
 
@@ -13,7 +13,7 @@ void GetAllRemaining ()
         var langChapterString = GetLangFileName(chapter);
         try
         {
-            GetRemaining(chapterString, langChapterString);
+            GetRemaining(chapter);
         }
         catch (System.Exception)
         {
@@ -22,10 +22,11 @@ void GetAllRemaining ()
     }
 }
 
-void GetRemaining (string chapterString, string langChapterString)
+void GetRemaining (Chapter chapter)
 {
-    var langJP = GetLang("ja" + langChapterString);
-    var langEN = GetLang("en" + langChapterString);
+    var chapterString = GetChapterFileName(chapter);
+    var langJP = GetDeltaruneLangFile(chapter, Lang.JP);
+    var langEN = GetDeltaruneLangFile(chapter, Lang.EN);
     var valid = GetFileTextList(Path.Combine(langFolder, "valid_" + chapterString + ".txt"));
     var test = GetFileTextList(Path.Combine(langList, "test-" + chapterString + ".txt"));
 

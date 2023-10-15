@@ -1,6 +1,6 @@
 #load "DeltarunePaths.csx"
 #load "DeltaruneConstants.csx"
-#load "GetLang.csx"
+#load "LangFile.csx"
 
 using System.Linq;
 
@@ -20,7 +20,7 @@ void ExportEmpty (Lang lang, Chapter chapter)
     var langName = GetLangName(lang);
     var chName = GetChapterFileName(chapter);
     var chFileName = GetLangFileName(chapter);
-    var langJSON = GetLang(langName + chFileName);
+    var langJSON = GetDeltaruneLangFile(chapter, lang);
 
     List<string> empty = new();
 

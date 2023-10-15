@@ -1,6 +1,6 @@
 #load "DeltarunePaths.csx"
-#load "ExportEnLang.csx"
-#load "ExportCh1Deprecated.csx"
+#load "ExportCh2EnLang.csx"
+#load "ExportDeprecated.csx"
 #load "GetLanguageExclusive.csx"
 #load "GetEmptyText.csx"
 #load "GenerateValidList.csx"
@@ -10,7 +10,7 @@ EnsureDataLoaded();
 
 if (!File.Exists(Path.Combine(langFolder, "lang_en.json")))
 {
-    await ExportEnData();
+    await ExportCh2EnData();
 }
 if (!File.Exists(Path.Combine(langFolder, "deprecated_ch1.txt")))
 {
