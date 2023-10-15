@@ -300,7 +300,7 @@ Replace(
 //
 
 // a character pattern that can never used in a string (needs to be 13 char to account for possible names)
-string Delimiter = "KKKKKKKKKKKKK";
+string Delimiter = "_K_K_K_K_K_K_";
 
 ImportGMLString(
 "burn_text_id",
