@@ -478,6 +478,24 @@ Dictionary<string, int[]> StringFunctions = new()
     { "string_char_at", new[] { 0, 2 } }
 };
 
+string AddClearToFunction (string line, string function)
+{
+    int start = line.IndexOf(function);
+    int j = start + function.Length;
+    int depth = 0;
+    do
+    {
+        char c = line[j];
+        if (c == '(')
+            depth++;
+        else if (c == ')')
+            depth--;
+        j++;
+    }
+    while (depth > 0);
+    return line.Substring(0, start) + "clean_text_string(" + line.Substring(start, j - start) + ", 1)" + line.Substring(j) + "\n";
+}
+
 string AddAutoClear (string content, int startLine = 0, int endLine = 0)
 {
     var functionsToClear = new[]
@@ -499,20 +517,7 @@ string AddAutoClear (string content, int startLine = 0, int endLine = 0)
             {
                 if (Regex.IsMatch(line, @$"\b{function}\b"))
                 {
-                    int start = lines[i].IndexOf(function);
-                    int j = start + function.Length;
-                    int depth = 0;
-                    do
-                    {
-                        char c = lines[i][j];
-                        if (c == '(')
-                            depth++;
-                        else if (c == ')')
-                            depth--;
-                        j++;
-                    }
-                    while (depth > 0);
-                    finalContent += line.Substring(0, start) + "clean_text_string(" + line.Substring(start, j - start) + ", 1)" + line.Substring(j) + "\n";
+                    finalContent += AddClearToFunction(line, function);
                     found = true;
                     break;
                 }
