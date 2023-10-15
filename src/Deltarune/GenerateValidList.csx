@@ -1,5 +1,5 @@
 #load "..\Lib\GetJson.csx"
-#load "GetTextList.csx"
+#load "..\Lib\TextList.csx"
 #load "DeltarunePaths.csx"
 
 using System.Linq;

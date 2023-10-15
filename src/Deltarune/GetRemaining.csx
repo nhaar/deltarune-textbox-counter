@@ -1,7 +1,7 @@
 #load "DeltarunePaths.csx"
 #load "DeltaruneConstants.csx"
 #load "GetLang.csx"
-#load "GetTextList.csx"
+#load "..\Lib\TextList.csx"
 
 using System.Linq;
 
