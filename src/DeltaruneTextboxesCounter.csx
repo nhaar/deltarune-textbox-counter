@@ -7,6 +7,11 @@ EnsureDataLoaded();
 
 ThreadLocal<GlobalDecompileContext> DECOMPILE_CONTEXT = new ThreadLocal<GlobalDecompileContext>(() => new GlobalDecompileContext(Data, false));
 
+var functionsToClear = new[]
+    {
+    "stringset", "scr_84_get_lang_string_ch1", "stringsetloc", "stringsetsubloc"
+};
+
 var MainObj = new UndertaleGameObject();
 MainObj.Persistent = true;
 MainObj.Name = new UndertaleString("obj_textbox_counter");
@@ -498,10 +503,6 @@ string AddClearToFunction (string line, string function)
 
 string AddAutoClear (string content, int startLine = 0, int endLine = 0)
 {
-    var functionsToClear = new[]
-        {
-        "stringset", "scr_84_get_lang_string_ch1", "stringsetloc", "stringsetsubloc"
-    };
     var lines = content.Split("\n");
     if (endLine == 0)
         endLine = lines.Length;
@@ -580,6 +581,8 @@ async Task ReplaceDrawFunctions ()
 void ReplaceDrawFunctions (UndertaleCode code)
 {
     var update = false;
+    bool containsComp = false;
+    bool containsStrFunction = false;
 
     var newFunctions = DrawFunctions.Keys.Union(StringFunctions.Keys).ToList();
     // replace function names in assembly for old ones
@@ -588,7 +591,11 @@ void ReplaceDrawFunctions (UndertaleCode code)
         if (code.Instructions[i].Kind == UndertaleInstruction.Opcode.Call)
         {
             var functionName = code.Instructions[i].Function.ToString();
-            if
+            if (functionsToClear.Contains(functionName.Replace("gml_Script_", "")))
+            {
+                containsStrFunction = true;
+            }
+            else if
             (
                 newFunctions.Contains(functionName) &&
                 code.Name.Content != $"gml_GlobalScript_{functionName}" &&
@@ -599,11 +606,45 @@ void ReplaceDrawFunctions (UndertaleCode code)
                 code.Instructions[i].Function = new UndertaleInstruction.Reference<UndertaleFunction>(Data.Functions.ByName($"gml_Script_new_{functionName}"));
             }
         }
+        else if
+        (
+            code.Instructions[i].Kind == UndertaleInstruction.Opcode.Cmp &&
+            (code.Instructions[i].Type1 == UndertaleInstruction.DataType.Variable ||code.Instructions[i].Type1 == UndertaleInstruction.DataType.String) &&
+            (code.Instructions[i].Type2 == UndertaleInstruction.DataType.Variable ||code.Instructions[i].Type2 == UndertaleInstruction.DataType.String)
+        )
+        {
+            containsComp = true;
+        }
     }
-    if (ExceptionEntries.Contains(code.Name.Content))
+
+    var possibleException = (containsComp && containsStrFunction);
+    var isException = ExceptionEntries.Contains(code.Name.Content);
+    if (possibleException || isException)
     {        
         var codeContent = Decompiler.Decompile(code, DECOMPILE_CONTEXT.Value);
-        codeContent = AddAutoClear(codeContent);
+        if (possibleException)
+        {
+            foreach (string function in functionsToClear)
+            {
+                var operators = new[] { "==", "!=" };
+
+                foreach (string o in operators)
+                {
+                    var lines = Regex.Split(codeContent, @$"(?={o}\s{function}\()");
+                    var newLines = new List<string>();
+                    newLines.Add(lines[0]);
+                    for (int i = 1; i < lines.Length; i++)
+                    {
+                        newLines.Add(AddClearToFunction(lines[i], function));
+                    }
+                    codeContent = String.Join("", newLines);
+                }
+            }
+        }
+        else if (isException)
+        {
+            codeContent = AddAutoClear(codeContent);
+        }
         UpdatedCode[code.Name.Content] = codeContent;
         ToUpdate.Add(code);
     }
