@@ -4,3 +4,6 @@ date
 
 // was supposed to play at the start of CH1, but gets cut off by the heart animation
 DEVICE_CONTACT_slash_Step_0_gml_8_0 
+
+// this is a control string (used to know if you picked the name SUSIE)
+DEVICE_CONTACT_slash_Other_10_gml_1_0
