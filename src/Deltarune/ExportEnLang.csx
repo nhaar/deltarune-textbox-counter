@@ -1,4 +1,4 @@
-#load "DecompileContext.csx"
+#load "..\Lib\DecompileContext.csx"
 #load "DeltarunePaths.csx"
 #load "GetLang.csx"
 

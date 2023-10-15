@@ -1,4 +1,5 @@
-#load "DecompileContext.csx"
+#load "..\Lib\JsonExclusive.csx"
+#load "..\Lib\AddCommentToId.csx"
 #load "DeltarunePaths.csx"
 #load "DeltaruneConstants.csx"
 #load "GetLang.csx"
@@ -15,25 +16,22 @@ void GetLanguageExclusive()
 
 void GetChapterLanguageExclusive (Chapter chapter)
 {
-    var langs = new Dictionary<string, Dictionary<string, string>>();
-    foreach (Lang lang in Enum.GetValues(typeof(Lang)))
+    var langs = new List<Dictionary<string, string>>();
+    var langTypes = (Lang[])Enum.GetValues(typeof(Lang));
+    foreach (Lang lang in langTypes)
     {
-        langs[GetLangName(lang)] = GetLang(GetLangName(lang) + GetLangFileName(chapter));
+        langs.Add(GetLang(GetLangName(lang) + GetLangFileName(chapter)));
     }
 
-    foreach (string lang in langs.Keys)
-    {   
-        var thisLang = langs[lang];
-        var languageOnly = new HashSet<string>();
-        var otherLang = langs.Where(l => l.Key != lang).First().Key;
-        foreach (string textId in thisLang.Keys)
-        {
-            if (!langs[otherLang].ContainsKey(textId))
-            {
-                languageOnly.Add(textId + " //" + thisLang[textId]);
-            }
-        }
+    var sets = GetJsonExclusive(langs.ToArray());
 
-        File.WriteAllLines(Path.Combine(langFolder, $"only_{lang}_{GetChapterFileName(chapter)}.txt"), languageOnly);
+    for (int i = 0; i < langTypes.Length; i++)
+    {   
+        var langName = GetLangName(langTypes[i]);
+        File.WriteAllLines
+        (
+            Path.Combine(langFolder, $"only_{langName}_{GetChapterFileName(chapter)}.txt"),
+            sets[i].Select(textId => AddCommentToId(textId, langs.ToArray()))            
+        );
     }
 }

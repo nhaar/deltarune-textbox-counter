@@ -1,5 +1,5 @@
 #load "DeltarunePaths.csx"
-#load "GetJson.csx"
+#load "..\Lib\GetJson.csx"
 
 Dictionary<string, string> GetLang(string langName)
 {

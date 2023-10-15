@@ -1,4 +1,4 @@
-#load "DecompileContext.csx"
+#load "..\Lib\DecompileContext.csx"
 
 using System.Linq;
 using System.Collections.Concurrent;
