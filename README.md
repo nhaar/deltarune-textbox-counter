@@ -26,6 +26,7 @@ The mod is currently in beta testing for both UNDERTALE and DELTARUNE. Here's ho
 * Report any bugs that make the game unplayable!
 * Report any occasions of the text not having proper width, like this:
 <img width="463" alt="image" src="https://github.com/nhaar/deltarune-textbox-counter/assets/38634785/48629cc1-6b10-45d7-bc59-85e77ec15911">
+
 * Report any occasions of the text displaying a weird name
 ![image](https://github.com/nhaar/deltarune-textbox-counter/assets/38634785/b65b21c6-71dd-4c19-8885-1144954dc309)
 
