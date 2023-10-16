@@ -1,5 +1,5 @@
 #load "..\Lib\Deprecated.csx"
-#load "..\Lib\AddComment.csx"
+#load "..\Lib\TextIdList.csx"
 #load "LangFile.csx"
 #load "DeltaruneConstants.csx"
 #load "DeltarunePaths.csx"

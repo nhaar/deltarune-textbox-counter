@@ -2,8 +2,7 @@
 
 #load "..\Lib\JsonUtils.csx"
 #load "UndertaleUtils.csx"
-#load "..\Lib\AddComment.csx"
-#load "..\Lib\TextList.csx"
+#load "..\Lib\TextIdList.csx"
 
 using System.Linq;
 
@@ -16,24 +15,24 @@ GetAllRemaining();
 
 void GetAllValid ()
 {
-    var emptyEN = GetFileTextList(Path.Combine(langFolder, "empty_en.txt"));
-    var emptyJP = GetFileTextList(Path.Combine(langFolder, "empty_ja.txt"));
+    var emptyEN = GetTextIdList(Path.Combine(langFolder, "empty_en.txt"));
+    var emptyJP = GetTextIdList(Path.Combine(langFolder, "empty_ja.txt"));
     var empty = new HashSet<string>(emptyEN.Intersect(emptyJP));
 
-    var unused = GetFileTextList(Path.Combine(langList, "unused.txt"));
+    var unused = GetTextIdList(Path.Combine(langList, "unused.txt"));
 
     var valid = langEN.Keys.Union(langJP.Keys).Except(empty).Except(unused);
 
-    WriteWithComments(Path.Combine(langFolder, "valid.txt"), valid.ToList(), langEN, langJP);
+    WriteIdListWithComments(Path.Combine(langFolder, "valid.txt"), valid.ToList(), langEN, langJP);
 }
 
 void GetAllRemaining ()
 {
-    var valid = GetFileTextList(Path.Combine(langFolder, "valid.txt"));
-    var test = GetFileTextList(Path.Combine(langFolder, "test.txt"));
+    var valid = GetTextIdList(Path.Combine(langFolder, "valid.txt"));
+    var test = GetTextIdList(Path.Combine(langFolder, "test.txt"));
 
     var remaining = valid.Except(test);
-    WriteWithComments(Path.Combine(langFolder, "remaining.txt"), remaining.ToList(), langEN, langJP);
+    WriteIdListWithComments(Path.Combine(langFolder, "remaining.txt"), remaining.ToList(), langEN, langJP);
 }
 
 
@@ -42,8 +41,8 @@ void GetAllEmpty ()
     var emptyEN = FilterEmpty(langEN);
     var emptyJP = FilterEmpty(langJP);
 
-    WriteWithComments(Path.Combine(langFolder, "empty_en.txt"), emptyEN, langEN, langJP);
-    WriteWithComments(Path.Combine(langFolder, "empty_ja.txt"), emptyJP, langEN, langJP);
+    WriteIdListWithComments(Path.Combine(langFolder, "empty_en.txt"), emptyEN, langEN, langJP);
+    WriteIdListWithComments(Path.Combine(langFolder, "empty_ja.txt"), emptyJP, langEN, langJP);
 }
 
 List<string> FilterEmpty (Dictionary<string, string> lang)

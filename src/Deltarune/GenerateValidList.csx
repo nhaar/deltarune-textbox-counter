@@ -1,5 +1,5 @@
 #load "..\Lib\JsonUtils.csx"
-#load "..\Lib\TextList.csx"
+#load "..\Lib\TextIdList.csx"
 #load "DeltarunePaths.csx"
 
 using System.Linq;
@@ -23,10 +23,10 @@ void OutputValid (string chapterString, string langChapterString)
 {
     var langJP = GetJsonAsDict(Path.Combine(langFolder, "lang_ja" + langChapterString + ".json"));
     var langEN = GetJsonAsDict(Path.Combine(langFolder, "lang_en" + langChapterString + ".json"));
-    var deprecated = GetFileTextList(Path.Combine(langFolder, "deprecated_" + chapterString + ".txt"));
-    var unused = GetFileTextList(Path.Combine(langList, "unused-" + chapterString + ".txt"));
-    var emptyJP = GetFileTextList(Path.Combine(langFolder, "empty_" + chapterString + "_ja.txt"));
-    var emptyEN = GetFileTextList(Path.Combine(langFolder, "empty_" + chapterString + "_en.txt"));
+    var deprecated = GetTextIdList(Path.Combine(langFolder, "deprecated_" + chapterString + ".txt"));
+    var unused = GetTextIdList(Path.Combine(langList, "unused-" + chapterString + ".txt"));
+    var emptyJP = GetTextIdList(Path.Combine(langFolder, "empty_" + chapterString + "_ja.txt"));
+    var emptyEN = GetTextIdList(Path.Combine(langFolder, "empty_" + chapterString + "_en.txt"));
 
     var allKeys = langEN.Concat(langJP.Where(kv => !langEN.ContainsKey(kv.Key))).ToDictionary(kv => kv.Key, kv => kv.Value).Keys.ToList();
     var validKeys = new HashSet<string>();

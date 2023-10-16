@@ -1,5 +1,5 @@
 #load "..\Lib\JsonUtils.csx"
-#load "..\Lib\AddComment.csx"
+#load "..\Lib\TextIdList.csx"
 #load "DeltarunePaths.csx"
 #load "DeltaruneConstants.csx"
 #load "LangFile.csx"

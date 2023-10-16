@@ -18,7 +18,7 @@ void GetLanguageExclusive ()
     {
         var langName = GetUndertaleLangName(lang);
         var langIndex = lang == Lang.EN ? 0 : 1;
-        WriteWithComments(Path.Combine(langFolder, $"only_{langName}.txt"), exclusive[langIndex], langEN, langJP);
+        WriteIdListWithComments(Path.Combine(langFolder, $"only_{langName}.txt"), exclusive[langIndex], langEN, langJP);
     }
 }
 
