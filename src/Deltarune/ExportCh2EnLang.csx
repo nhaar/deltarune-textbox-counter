@@ -1,4 +1,5 @@
 #load "..\Lib\DecompileContext.csx"
+#load "..\Lib\ExportJson.csx"
 #load "LangFile.csx"
 #load "DeltarunePaths.csx"
 
@@ -56,7 +57,7 @@ async Task ExportCh2EnData ()
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
     });
 
-    File.WriteAllText(Path.Combine(langFolder, "lang_en.json"), jsonString);
+    ExportJson(output.ToDictionary(), Path.Combine(langFolder, "lang_en.json"));
 }
 
 
