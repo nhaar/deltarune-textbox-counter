@@ -6,3 +6,4 @@
 !/src/Deltarune/LangList
 /src/Undertale/*
 !/src/Undertale/*.csx
+!/src/Undertale/LangList
