@@ -1,14 +1,14 @@
 // This script updates the lang files with the latest changes
 
 #load "..\Lib\GetJson.csx"
-#load "UndertalePaths.csx"
+#load "UndertaleUtils.csx"
 #load "..\Lib\AddComment.csx"
 #load "..\Lib\TextList.csx"
 
 using System.Linq;
 
-var langEN = GetJsonAsDict(Path.Combine(langFolder, "lang_en.json"));
-var langJP = GetJsonAsDict(Path.Combine(langFolder, "lang_ja.json"));
+var langEN = GetUndertaleLang(Lang.EN);
+var langJP = GetUndertaleLang(Lang.JP);
 
 GetAllEmpty();
 GetAllValid();

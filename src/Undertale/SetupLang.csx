@@ -4,20 +4,24 @@
 #load "..\Lib\GetJson.csx"
 #load "..\Lib\ExportJson.csx"
 #load "..\Lib\JsonExclusive.csx"
-#load "UndertalePaths.csx"
+#load "UndertaleUtils.csx"
 
 ExportLang();
 
-var langEN = GetJsonAsDict(Path.Combine(langFolder, "lang_en.json"));
-var langJP = GetJsonAsDict(Path.Combine(langFolder, "lang_ja.json"));
+var langEN = GetUndertaleLang(Lang.EN);
+var langJP = GetUndertaleLang(Lang.JP);
 
 GetLanguageExclusive();
 
 void GetLanguageExclusive ()
 {
     var exclusive = GetJsonExclusive(langEN, langJP);
-    WriteWithComments(Path.Combine(langFolder, "only_en.txt"), exclusive[0], langEN, langJP);
-    WriteWithComments(Path.Combine(langFolder, "only_ja.txt"), exclusive[1], langEN, langJP);
+    foreach (Lang lang in Enum.GetValues(typeof(lang)))
+    {
+        var langName = GetUndertaleLangName(lang);
+        var langIndex = lang == Lang.EN ? 0 : 1;
+        WriteWithComments(Path.Combine(langFolder, $"only_{langName}.txt"), exclusive[langIndex], langEN, langJP);
+    }
 }
 
 void ExportLang ()
@@ -27,8 +31,11 @@ void ExportLang ()
         Directory.CreateDirectory(langFolder);
     }
 
-    TextDataExtract("gml_Script_textdata_en", "global.text_data_en", "lang_en.json");
-    TextDataExtract("gml_Script_textdata_ja", "global.text_data_ja", "lang_ja.json");
+    foreach (Lang lang in Enum.GetValues(typeof(lang)))
+    {
+        var langName = GetUndertaleLangName(lang);
+        TextDataExtract($"gml_Script_textdata_{langName}", $"global.text_data_{langName}", $"lang_{langName}.json");
+    }
 }
 
 void TextDataExtract (string codeName, string textData, string fileName)
