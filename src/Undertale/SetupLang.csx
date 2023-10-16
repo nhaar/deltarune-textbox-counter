@@ -1,7 +1,24 @@
+// This script setups the lang files for first time use (theoretically will not change over time)
+
 #load "..\Lib\DecompileContext.csx"
 #load "..\Lib\ExportJson.csx"
+#load "..\Lib\JsonExclusive.csx"
 
 var langFolder = Path.Combine(Path.GetDirectoryName(FilePath), "lang");
+
+ExportLang();
+
+var langEN = GetJsonAsDict(Path.Combine(langFolder, "lang_en.json"));
+var langJP = GetJsonAsDict(Path.Combine(langFolder, "lang_ja.json"));
+
+GetLanguageExclusive();
+
+void GetLanguageExclusive ()
+{
+    var exclusive = GetJsonExclusive(langEN, langJP);
+    File.WriteAllLines(Path.Combine(langFolder, "only_en.txt"), exclusive[0]);
+    File.WriteAllLines(Path.Combine(langFolder, "only_ja.txt"), exclusive[1]);
+}
 
 void ExportLang ()
 {

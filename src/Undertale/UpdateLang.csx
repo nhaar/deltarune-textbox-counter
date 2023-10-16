@@ -1,27 +1,17 @@
+// This script updates the lang files with the latest changes
+
 #load "ExportLang.csx"
-#load "..\Lib\JsonExclusive.csx"
 #load "..\Lib\GetJson.csx"
 #load "EmptyText.csx"
 
 using System.Linq;
 
-
-ExportLang();
-
 var langEN = GetJsonAsDict(Path.Combine(langFolder, "lang_en.json"));
 var langJP = GetJsonAsDict(Path.Combine(langFolder, "lang_ja.json"));
 
-GetLanguageExclusive();
 GetAllEmpty();
 GetAllValid();
 GetAllRemaining();
-
-void GetLanguageExclusive ()
-{
-    var exclusive = GetJsonExclusive(langEN, langJP);
-    File.WriteAllLines(Path.Combine(langFolder, "only_en.txt"), exclusive[0]);
-    File.WriteAllLines(Path.Combine(langFolder, "only_ja.txt"), exclusive[1]);
-}
 
 void GetAllValid ()
 {
@@ -51,4 +41,31 @@ void GetAllRemaining ()
 
     var remaining = valid.Except(test);
     File.WriteAllLines(Path.Combine(langFolder, "remaining.txt"), remaining);
+}
+
+
+void GetAllEmpty ()
+{
+    var langEN = GetJsonAsDict(Path.Combine(langFolder, "lang_en.json"));
+    var langJP = GetJsonAsDict(Path.Combine(langFolder, "lang_ja.json"));
+
+    var emptyEN = new List<string>();
+    var emptyJP = new List<string>();
+
+    foreach (string key in langEN.Keys)
+    {
+        if (string.IsNullOrWhiteSpace(langEN[key]))
+        {
+            emptyEN.Add(key);
+        }
+    }
+    foreach (string key in langJP.Keys)
+    {
+        if (string.IsNullOrWhiteSpace(langJP[key]))
+        {
+            emptyJP.Add(key);
+        }
+    }
+
+    File.WriteAllLines(Path.Combine(langFolder, "empty_en.txt"), emptyEN);   
 }
