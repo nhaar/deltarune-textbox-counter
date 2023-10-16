@@ -7,68 +7,6 @@ using System.Threading.Tasks;
 
 EnsureDataLoaded();
 
-var functionsToClear = new[]
-    {
-    "stringset", "scr_84_get_lang_string_ch1", "stringsetloc", "stringsetsubloc"
-};
-
-var MainObj = new UndertaleGameObject();
-MainObj.Persistent = true;
-MainObj.Name = new UndertaleString("obj_textbox_counter");
-Data.GameObjects.Add(MainObj);
-Data.Strings.Add(MainObj.Name);
-MainObj.EventHandlerFor(EventType.Create, Data).ReplaceGML(
-@$"
-directory_create(""textstuff"");
-
-global.read_text_map = ds_map_create();
-global.read_total = 0;
-
-var read = file_text_open_read(""textstuff/text.txt"");
-if (read == -1)
-{{
-    var file = file_text_open_append(""textstuff/text.txt"");
-    file_text_close(file);
-}}
-else
-{{
-    while (true)
-    {{
-        var line = file_text_read_string(read);
-        if (line == """")
-            break;
-        global.read_total++;
-        ds_map_add(global.read_text_map, line, 1);
-        file_text_readln(read);
-    }}
-    file_text_close(read);
-}}", Data);
-
-ImportGMLString(
-"counter_draw_text",
-@"function counter_draw_text(argument0, argument1, argument2)
-{
-    draw_set_font(fnt_main);
-    draw_set_color(c_white);
-    var xpos = argument0
-    var ypos = argument1
-    var str = argument2
-    draw_text((__view_get((0 << 0), 0) + xpos), (__view_get((1 << 0), 0) + ypos), str)
-}"
-);
-
-MainObj.EventHandlerFor(EventType.Draw, Data).ReplaceGML(@$"
-counter_draw_text(20, 0, ""Text total: "" + string(global.read_total));
-", Data);
-
-Append(
-@"gml_Object_obj_CHAPTER_SELECT_Create_0",
-@"if (!i_ex(obj_textbox_counter))
-    instance_create(0, 0, obj_textbox_counter);"
-);
-
-UseDebug();
-
 // very odd try catch hook that needs to be removed or modtool can't compile it
 Replace(
 "gml_Object_obj_tensionbar_Draw_0",
@@ -76,25 +14,211 @@ Replace(
 if (global.tensionselect >= 0)
     shit = 1
 @@try_unhook@@()",
-@""
+""
 );
 
-ImportGMLString(
-"append_text_line.gml",
-@"function append_text_line (argument0)
+async Task SetupSystem
+(
+    string[] textReturningFunctions,
+    string initiatorObject,
+    Dictionary<string, int[]> drawFunctions,
+    Dictionary<string, int[]> stringFunctions,
+    string[] exceptionEntries
+)
 {
-    var line = argument0;
-    if (!ds_map_exists(global.read_text_map, line))
-    {
-        show_debug_message(""Appended: "" + line);
+
+    // a character pattern that can never used in a string (needs to be 13 char to account for possible names)
+    string delimiter = "_K_K_K_K_K_K_";
+
+    var mainObj = new UndertaleGameObject();
+    mainObj.Persistent = true;
+    mainObj.Name = new UndertaleString("obj_textbox_counter");
+    Data.GameObjects.Add(mainObj);
+    Data.Strings.Add(mainObj.Name);
+
+    
+    mainObj.EventHandlerFor(EventType.Create, Data).ReplaceGML(
+    @$"
+    directory_create(""textstuff"");
+
+    global.read_text_map = ds_map_create();
+    global.read_total = 0;
+
+    var read = file_text_open_read(""textstuff/text.txt"");
+    if (read == -1)
+    {{
         var file = file_text_open_append(""textstuff/text.txt"");
-        ds_map_add(global.read_text_map, line, 1);
-        global.read_total++;
-        file_text_write_string(file, line + ""\n"");
         file_text_close(file);
+    }}
+    else
+    {{
+        while (true)
+        {{
+            var line = file_text_read_string(read);
+            if (line == """")
+                break;
+            global.read_total++;
+            ds_map_add(global.read_text_map, line, 1);
+            file_text_readln(read);
+        }}
+        file_text_close(read);
+    }}", Data);
+
+    ImportGMLString(
+    "counter_draw_text",
+    @"function counter_draw_text(argument0, argument1, argument2)
+    {
+        draw_set_font(fnt_main);
+        draw_set_color(c_white);
+        var xpos = argument0
+        var ypos = argument1
+        var str = argument2
+        draw_text((__view_get((0 << 0), 0) + xpos), (__view_get((1 << 0), 0) + ypos), str)
+    }"
+    );
+
+    mainObj.EventHandlerFor(EventType.Draw, Data).ReplaceGML(@$"
+    counter_draw_text(20, 0, ""Text total: "" + string(global.read_total));
+    ", Data);
+
+    Append(
+    initiatorObject,
+    @"if (!instance_exists(obj_textbox_counter))
+        instance_create(0, 0, obj_textbox_counter);"
+    );
+
+    ImportGMLString(
+    "burn_text_id",
+    @$"function burn_text_id(argument0, argument1, argument2)
+    {{
+        var str = argument0
+        var localized_string_id = argument1
+        var suffix = argument2
+        if (is_undefined(suffix))
+            suffix = """"
+        var delimiter = ""{delimiter}""
+        return (str + delimiter + localized_string_id + suffix + delimiter);
+    }}"
+    );
+
+    
+    ImportGMLString(
+    "append_text_line.gml",
+    @"function append_text_line (argument0)
+    {
+        var line = argument0;
+        if (!ds_map_exists(global.read_text_map, line))
+        {
+            show_debug_message(""Appended: "" + line);
+            var file = file_text_open_append(""textstuff/text.txt"");
+            ds_map_add(global.read_text_map, line, 1);
+            global.read_total++;
+            file_text_write_string(file, line + ""\n"");
+            file_text_close(file);
+        }
+    }"
+    );
+
+    
+    ImportGMLString(
+    "clean_text_string",
+    @$"function clean_text_string(argument0, argument1)
+    {{
+        var str = argument0
+        var cancel_append = argument1
+        var delimiter = ""{delimiter}""
+
+        var start_index = string_pos(delimiter, str)
+        var before_delimiter, rest, end_index, after_delimiter, between_delimiters
+        while (start_index > 0)
+        {{
+            before_delimiter = string_copy(str, 1, (start_index - 1))
+            rest = string_copy(str, (start_index + string_length(delimiter)), string_length(str))
+            end_index = string_pos(delimiter, rest)
+            between_delimiters = string_copy(rest, 1, end_index - 1)
+            if (cancel_append != true)
+                append_text_line(between_delimiters)
+            after_delimiter = string_copy(rest, (end_index + string_length(delimiter)), string_length(str))
+            str = before_delimiter + after_delimiter
+            start_index = string_pos(delimiter, str)
+        }}
+        return str;
+    }}"
+    );
+        
+    foreach (string drawFunction in drawFunctions.Keys)
+    {
+        CreateNewFunction(drawFunction, drawFunctions[drawFunction], true);
     }
-}"
+
+    foreach (string stringFunction in stringFunctions.Keys)
+    {
+        CreateNewFunction(stringFunction, stringFunctions[stringFunction], false);
+    }
+
+    UndertaleCode[] AllCode = Data.Code.Where(c => c.ParentEntry == null).ToArray();
+    List<UndertaleCode> toUpdate = new();
+    ConcurrentDictionary<string, string> updatedCode = new();
+
+    
+    SetProgressBar(null, "Replacing Functions", 0, AllCode.Length);
+    StartProgressBarUpdater();
+    for (int i = 0; i < 5; i++)
+    {
+        try
+        {
+            await Parallel.ForEachAsync(AllCode, async (code, cancellationToken) => ReplaceDrawFunctions(code, textReturningFunctions, exceptionEntries, drawFunctions, stringFunctions, updatedCode, toUpdate));
+            break;
+        }
+        catch
+        {
+        }
+    }    
+    await StopProgressBarUpdater();
+
+    foreach (UndertaleCode code in toUpdate)
+    {
+        Console.WriteLine(code.Name.Content);
+        Console.WriteLine("");
+        OutputCode(updatedCode[code.Name.Content]);
+        code.ReplaceGML(updatedCode[code.Name.Content], Data);
+
+    }
+}
+
+await SetupSystem
+(
+    new[] { "stringset", "scr_84_get_lang_string_ch1", "stringsetloc", "stringsetsubloc" },
+    @"gml_Object_obj_CHAPTER_SELECT_Create_0",
+    new()
+    {
+        { "draw_text_shadow", new[] { 2, 3 } },
+        { "draw_text_transformed", new[] { 2, 6 } },
+        { "draw_text_width", new[] { 2, 4 } },
+        { "draw_text", new[] { 2, 3 } },
+        // required for colored monster names
+        { "draw_text_colour", new[] { 2, 8 } },
+        // initially required for the "HIT" text in punchout
+        { "draw_text_ext", new[] { 2, 5 } },
+        // initially required for the in-queen battle text like "Defenseless"
+        { "draw_text_ext_transformed", new[] { 2, 8 } },
+        { "window_set_caption", new[] { 0, 1 } }
+    },
+    new()
+    {
+        // initially required for displaying enemy names with proper width in battle
+        { "string_width", new[] { 0, 1 } },
+        // these two were initially required for spelling bee
+        { "string_length", new[] { 0, 1 } },
+        { "string_char_at", new[] { 0, 2 } }
+    },
+    new[]
+    {
+        "gml_GlobalScript_scr_asterskip_ch1",
+        "gml_Object_obj_writer_ch1_Draw_0"
+    }
 );
+UseDebug();
 
 Replace(
 "gml_GlobalScript_msgnextloc",
@@ -304,29 +428,20 @@ Replace(
 
 //
 
-// a character pattern that can never used in a string (needs to be 13 char to account for possible names)
-string Delimiter = "_K_K_K_K_K_K_";
-
 ImportGMLString(
-"burn_text_id",
-@$"function burn_text_id(argument0, argument1, argument2)
-{{
+"deltarune_burn_text_id",
+@"
+function deltarune_burn_text_id(argument0, argument1, argument2)
+{
     var str = argument0
     var localized_string_id = argument1
     var chapter = argument2
-    var delimiter = ""{Delimiter}""
     var suffix
-    if (is_undefined(localized_string_id))
-    {{
-        suffix = """"
-    }}
-    else
-    {{
-        suffix = delimiter + localized_string_id + ""_ch"" + string(chapter) + delimiter
-    }}
-    return (str + suffix);
-}}"
-);
+    if (!is_undefined(localized_string_id))
+        suffix = ""_ch"" + string(chapter)
+    return burn_text_id(str, localized_string_id, suffix)
+}
+");
 
 //
 
@@ -338,7 +453,7 @@ Replace(
 }",
 @"function scr_84_get_lang_string_ch1(argument0) //gml_Script_scr_84_get_lang_string_ch1
 {
-    return burn_text_id(ds_map_find_value(global.lang_map, argument0), argument0, 1);
+    return deltarune_burn_text_id(ds_map_find_value(global.lang_map, argument0), argument0, 1);
 }"
 );
 
@@ -352,7 +467,7 @@ Replace(
 @"function msgset(argument0, argument1, argument2) //gml_Script_msgset
 {
     global.msgno = argument0
-    global.msg[argument0] = burn_text_id(argument1, argument2, 2)
+    global.msg[argument0] = deltarune_burn_text_id(argument1, argument2, 2)
 }"
 );
 
@@ -364,7 +479,7 @@ Replace(
 }",
 @"function stringset(argument0, argumen1) //gml_Script_stringset
 {
-    return burn_text_id(argument0, argument1, 2);
+    return deltarune_burn_text_id(argument0, argument1, 2);
 }"
 );
 
@@ -404,32 +519,6 @@ Replace(
         msgnext(command_arg1[i], command_arg2[i])"
 );
 
-ImportGMLString(
-"clean_text_string",
-@$"function clean_text_string(argument0, argument1)
-{{
-    var str = argument0
-    var cancel_append = argument1
-    var delimiter = ""{Delimiter}""
-
-    var start_index = string_pos(delimiter, str)
-    var before_delimiter, rest, end_index, after_delimiter, between_delimiters
-    while (start_index > 0)
-    {{
-        before_delimiter = string_copy(str, 1, (start_index - 1))
-        rest = string_copy(str, (start_index + string_length(delimiter)), string_length(str))
-        end_index = string_pos(delimiter, rest)
-        between_delimiters = string_copy(rest, 1, end_index - 1)
-        if (cancel_append != true)
-            append_text_line(between_delimiters)
-        after_delimiter = string_copy(rest, (end_index + string_length(delimiter)), string_length(str))
-        str = before_delimiter + after_delimiter
-        start_index = string_pos(delimiter, str)
-    }}
-    return str;
-}}"
-);
-
 // take care of everything in obj_writer
 
 // ch1
@@ -459,29 +548,7 @@ Replace(
 );
 
 // go to every draw function and replace it!
-Dictionary<string, int[]> DrawFunctions = new()
-{
-    { "draw_text_shadow", new[] { 2, 3 } },
-    { "draw_text_transformed", new[] { 2, 6 } },
-    { "draw_text_width", new[] { 2, 4 } },
-    { "draw_text", new[] { 2, 3 } },
-    // required for colored monster names
-    { "draw_text_colour", new[] { 2, 8 } },
-    // initially required for the "HIT" text in punchout
-    { "draw_text_ext", new[] { 2, 5 } },
-    // initially required for the in-queen battle text like "Defenseless"
-    { "draw_text_ext_transformed", new[] { 2, 8 } },
-    { "window_set_caption", new[] { 0, 1 } }
-};
 
-Dictionary<string, int[]> StringFunctions = new()
-{
-    // initially required for displaying enemy names with proper width in battle
-    { "string_width", new[] { 0, 1 } },
-    // these two were initially required for spelling bee
-    { "string_length", new[] { 0, 1 } },
-    { "string_char_at", new[] { 0, 2 } }
-};
 
 string AddClearToFunction (string line, string function)
 {
@@ -501,7 +568,7 @@ string AddClearToFunction (string line, string function)
     return line.Substring(0, start) + "clean_text_string(" + line.Substring(start, j - start) + ", 1)" + line.Substring(j) + "\n";
 }
 
-string AddAutoClear (string content, int startLine = 0, int endLine = 0)
+string AddAutoClear (string content, string[] textReturningFunctions, int startLine = 0, int endLine = 0)
 {
     var lines = content.Split("\n");
     if (endLine == 0)
@@ -514,7 +581,7 @@ string AddAutoClear (string content, int startLine = 0, int endLine = 0)
         if (i > startLine && i < endLine)
         {
             bool found = false;
-            foreach (string function in functionsToClear)
+            foreach (string function in textReturningFunctions)
             {
                 if (Regex.IsMatch(line, @$"\b{function}\b"))
                 {
@@ -534,64 +601,20 @@ string AddAutoClear (string content, int startLine = 0, int endLine = 0)
     return finalContent;
 }
 
-string[] ExceptionEntries =
-{
-    "gml_GlobalScript_scr_asterskip_ch1",
-    "gml_Object_obj_writer_ch1_Draw_0",
-    "gml_Object_obj_ch2_keyboardpuzzle_controller_Create_0",
-    "gml_Object_DEVICE_CONTACT_ch1_Other_10"
-};
-
-foreach (string drawFunction in DrawFunctions.Keys)
-{
-    CreateNewFunction(drawFunction, DrawFunctions[drawFunction], true);
-}
-
-foreach (string stringFunction in StringFunctions.Keys)
-{
-    CreateNewFunction(stringFunction, StringFunctions[stringFunction], false);
-}
-
-UndertaleCode[] AllCode = Data.Code.Where(c => c.ParentEntry == null).ToArray();
-List<UndertaleCode> ToUpdate = new();
-ConcurrentDictionary<string, string> UpdatedCode = new();
-
-
-SetProgressBar(null, "Replacing Functions", 0, AllCode.Length);
-StartProgressBarUpdater();
-await ReplaceDrawFunctions();
-await StopProgressBarUpdater();
-
-Console.WriteLine(ToUpdate.Count);
-
-foreach (UndertaleCode code in ToUpdate)
-{
-    Console.WriteLine(code.Name.Content);
-    Console.WriteLine("");
-    OutputCode(UpdatedCode[code.Name.Content]);
-    code.ReplaceGML(UpdatedCode[code.Name.Content], Data);
-
-}
-
-async Task ReplaceDrawFunctions ()
-{
-    await Parallel.ForEachAsync(AllCode, async (AllCode, cancellationToken) => ReplaceDrawFunctions(AllCode));
-}
-
-void ReplaceDrawFunctions (UndertaleCode code)
+void ReplaceDrawFunctions (UndertaleCode code, string[] textReturningFunctions, string[] exceptionEntries, Dictionary<string, int[]> drawFunctions, Dictionary<string, int[]> stringFunctions, ConcurrentDictionary<string, string> updatedCode, List<UndertaleCode> toUpdate)
 {
     var update = false;
     bool containsComp = false;
     bool containsStrFunction = false;
 
-    var newFunctions = DrawFunctions.Keys.Union(StringFunctions.Keys).ToList();
+    var newFunctions = drawFunctions.Keys.Union(stringFunctions.Keys).ToList();
     // replace function names in assembly for old ones
     for (int i = 0; i < code.Instructions.Count; i++) 
     {
         if (code.Instructions[i].Kind == UndertaleInstruction.Opcode.Call)
         {
             var functionName = code.Instructions[i].Function.ToString();
-            if (functionsToClear.Contains(functionName.Replace("gml_Script_", "")))
+            if (textReturningFunctions.Contains(functionName.Replace("gml_Script_", "")))
             {
                 containsStrFunction = true;
             }
@@ -618,13 +641,13 @@ void ReplaceDrawFunctions (UndertaleCode code)
     }
 
     var possibleException = (containsComp && containsStrFunction);
-    var isException = ExceptionEntries.Contains(code.Name.Content);
+    var isException = exceptionEntries.Contains(code.Name.Content);
     if (possibleException || isException)
     {        
         var codeContent = Decompiler.Decompile(code, DECOMPILE_CONTEXT.Value);
         if (possibleException)
         {
-            foreach (string function in functionsToClear)
+            foreach (string function in textReturningFunctions)
             {
                 var operators = new[] { "==", "!=" };
 
@@ -643,10 +666,10 @@ void ReplaceDrawFunctions (UndertaleCode code)
         }
         else if (isException)
         {
-            codeContent = AddAutoClear(codeContent);
+            codeContent = AddAutoClear(codeContent, textReturningFunctions);
         }
-        UpdatedCode[code.Name.Content] = codeContent;
-        ToUpdate.Add(code);
+        updatedCode[code.Name.Content] = codeContent;
+        toUpdate.Add(code);
     }
     IncrementProgressParallel();
 }
