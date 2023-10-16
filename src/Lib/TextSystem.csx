@@ -6,10 +6,30 @@ using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using System.Linq;
 
+/// <summary>
+/// Setup the text counting system
+/// </summary>
+/// <param name="textReturningFunctions">
+/// Functions that return the text strings
+/// </param>
+/// <param name="initiatorCode">Code entry to initiate the object</param>
+/// <param name="drawFunctions">
+/// Data of draw functions that need to be replaced
+/// </param>
+/// <param name="stringFunctions">
+/// Data of the string functions that need to be replaced
+/// </param>
+/// <param name="exceptionEntries">
+/// Data of the code entries that need not be replaced
+/// </param>
+/// <param name="isOldGMS">
+/// If version < GMS 2.3
+/// </param>
+/// <returns></returns>
 async Task SetupSystem
 (
     string[] textReturningFunctions,
-    string initiatorObject,
+    string initiatorCode,
     Dictionary<string, int[]> drawFunctions,
     Dictionary<string, int[]> stringFunctions,
     string[] exceptionEntries,
@@ -54,7 +74,7 @@ async Task SetupSystem
     ", Data);
 
     Append(
-    initiatorObject,
+    initiatorCode,
     @"if (!instance_exists(obj_textbox_counter))
         instance_create(0, 0, obj_textbox_counter);"
     );
@@ -145,7 +165,7 @@ async Task SetupSystem
         Console.WriteLine(i);
         try
         {
-            await Parallel.ForEachAsync(AllCode, async (code, cancellationToken) => ReplaceDrawFunctions(code, textReturningFunctions, exceptionEntries, drawFunctions, stringFunctions, isOldGMS, updatedCode, toUpdate));
+            await Parallel.ForEachAsync(AllCode, async (code, cancellationToken) => ReplaceFunctions(code, textReturningFunctions, exceptionEntries, drawFunctions, stringFunctions, isOldGMS, updatedCode, toUpdate));
             break;
         }
         catch (System.Exception e)
@@ -173,8 +193,28 @@ async Task SetupSystem
     }
 }
 
-
-void ReplaceDrawFunctions (UndertaleCode code, string[] textReturningFunctions, string[] exceptionEntries, Dictionary<string, int[]> drawFunctions, Dictionary<string, int[]> stringFunctions, bool isOldGMS, ConcurrentDictionary<string, string> updatedCode, List<UndertaleCode> toUpdate)
+/// <summary>
+/// Replace the functions across all files
+/// </summary>
+/// <param name="code"></param>
+/// <param name="textReturningFunctions"></param>
+/// <param name="exceptionEntries"></param>
+/// <param name="drawFunctions"></param>
+/// <param name="stringFunctions"></param>
+/// <param name="isOldGMS"></param>
+/// <param name="updatedCode"></param>
+/// <param name="toUpdate"></param>
+void ReplaceFunctions
+(
+    UndertaleCode code,
+    string[] textReturningFunctions,
+    string[] exceptionEntries,
+    Dictionary<string, int[]> drawFunctions,
+    Dictionary<string, int[]> stringFunctions,
+    bool isOldGMS,
+    ConcurrentDictionary<string, string> updatedCode,
+    List<UndertaleCode> toUpdate
+)
 {
     var update = false;
     bool containsComp = false;
@@ -219,7 +259,7 @@ void ReplaceDrawFunctions (UndertaleCode code, string[] textReturningFunctions, 
     var isException = exceptionEntries.Contains(code.Name.Content);
     if (possibleException || isException)
     {        
-        var codeContent = Decompiler.Decompile(code, DECOMPILE_CONTEXT.Value);
+        var codeContent = Decompile(code);
         if (possibleException)
         {
             foreach (string function in textReturningFunctions)
@@ -250,8 +290,12 @@ void ReplaceDrawFunctions (UndertaleCode code, string[] textReturningFunctions, 
     IncrementProgressParallel();
 }
 
-// go to every draw function and replace it!
-
+/// <summary>
+/// Add a clear text string to a function call
+/// </summary>
+/// <param name="line"></param>
+/// <param name="function"></param>
+/// <returns></returns>
 string AddClearToFunction (string line, string function)
 {
     int start = line.IndexOf(function);
@@ -270,6 +314,14 @@ string AddClearToFunction (string line, string function)
     return line.Substring(0, start) + "clean_text_string(" + line.Substring(start, j - start) + ", 1)" + line.Substring(j) + "\n";
 }
 
+/// <summary>
+/// Add a clear text string to all functions that return text strings
+/// </summary>
+/// <param name="content"></param>
+/// <param name="textReturningFunctions"></param>
+/// <param name="startLine"></param>
+/// <param name="endLine"></param>
+/// <returns></returns>
 string AddAutoClear (string content, string[] textReturningFunctions, int startLine = 0, int endLine = 0)
 {
     var lines = content.Split("\n");
@@ -303,6 +355,13 @@ string AddAutoClear (string content, string[] textReturningFunctions, int startL
     return finalContent;
 }
 
+/// <summary>
+/// Create a new function that calls the old one with a clear text string
+/// </summary>
+/// <param name="functionName"></param>
+/// <param name="argsInfo"></param>
+/// <param name="append"></param>
+/// <param name="isOldGMS"></param>
 void CreateNewFunction (string functionName, int[] argsInfo, bool append, bool isOldGMS)
 {
     var argNames = new List<string>();

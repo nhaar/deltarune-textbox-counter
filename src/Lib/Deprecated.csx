@@ -7,6 +7,12 @@ using System.Threading.Tasks;
 using System.Linq;
 using System.Text.Json;
 
+/// <summary>
+/// Get all deprecated text ids
+/// </summary>
+/// <param name="codeList"></param>
+/// <param name="langs"></param>
+/// <returns></returns>
 async Task<HashSet<string>> GetDeprecated (UndertaleCode[] codeList, params Dictionary<string, string>[] langs)
 {
     var langFiles = langs.Select(l => new DeprecatedSearchObject(l)).ToArray();
@@ -37,6 +43,9 @@ async Task<HashSet<string>> GetDeprecated (UndertaleCode[] codeList, params Dict
     return deprecated;
 }
 
+/// <summary>
+/// Holds both original and found text ids
+/// </summary>
 class DeprecatedSearchObject
 {
     public Dictionary<string, string> Lang;
@@ -50,9 +59,14 @@ class DeprecatedSearchObject
     }
 }
 
+/// <summary>
+/// Check if a code contains a text id from the target files
+/// </summary>
+/// <param name="code"></param>
+/// <param name="targetFiles"></param>
 void CheckCode (UndertaleCode code, DeprecatedSearchObject[] targetFiles)
 {
-    var decompiled = Decompiler.Decompile(code, DECOMPILE_CONTEXT.Value);
+    var decompiled = Decompile(code);
     foreach (DeprecatedSearchObject targetFile in targetFiles)
     {
         foreach (string textId in targetFile.Lang.Keys)

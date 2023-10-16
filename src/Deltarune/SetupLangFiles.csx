@@ -1,3 +1,5 @@
+// This script setups the language files for first time use
+
 #load "..\Lib\DecompileContext.csx"
 #load "..\Lib\JsonUtils.csx"
 #load "..\Lib\TextIdList.csx"
@@ -14,6 +16,10 @@ await ExportCh2EnData();
 await ExportDeltaruneDeprecated();
 GetLanguageExclusive();
 
+/// <summary>
+/// Export deltarune deprecated text ids
+/// </summary>
+/// <returns></returns>
 async Task ExportDeltaruneDeprecated ()
 {
     foreach (Chapter chapter in Enum.GetValues(typeof(Chapter)))
@@ -43,6 +49,10 @@ async Task ExportDeltaruneDeprecated ()
     }
 }
 
+/// <summary>
+/// Export the chapter 2 english language file as a json
+/// </summary>
+/// <returns></returns>
 async Task ExportCh2EnData ()
 {
 
@@ -123,7 +133,7 @@ string GetFirstArgument (string functionCall)
 /// <param name="code"></param>
 void SearchInCode (UndertaleCode code, Dictionary<string, string> langJP, ConcurrentDictionary<string, string> langEN)
 {
-    var codeContent = Decompiler.Decompile(code, DECOMPILE_CONTEXT.Value);
+    var codeContent = Decompile(code);
     var codeLines = codeContent.Split("\n").ToArray();
 
     // keeping track of the possible so that we will know when we can skip a line for certain
@@ -190,6 +200,9 @@ void SearchInCode (UndertaleCode code, Dictionary<string, string> langJP, Concur
     IncrementProgressParallel();
 }
 
+/// <summary>
+/// Get the text ids that are exclusive to each language
+/// </summary>
 void GetLanguageExclusive()
 {
     foreach (Chapter chapter in Enum.GetValues(typeof(Chapter)))
@@ -198,6 +211,10 @@ void GetLanguageExclusive()
     }
 }
 
+/// <summary>
+/// Get the text ids that are exclusive to each language in a chapter
+/// </summary>
+/// <param name="chapter"></param>
 void GetChapterLanguageExclusive (Chapter chapter)
 {
     var langs = new List<Dictionary<string, string>>();

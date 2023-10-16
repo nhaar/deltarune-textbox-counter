@@ -38,7 +38,7 @@ void ExportLang ()
 
 void TextDataExtract (string codeName, string textData, string fileName)
 {
-    var content = Decompiler.Decompile(Data.Code.ByName(codeName), DECOMPILE_CONTEXT.Value);
+    var content = Decompile(Data.Code.ByName(codeName));
     Dictionary<string, string> result = new();
     var lines = content.Split("\n");
     foreach (string line in lines)

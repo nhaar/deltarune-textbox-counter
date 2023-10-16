@@ -1,25 +1,51 @@
+/// <summary>
+/// Output test code to a file for debugging purposes
+/// </summary>
+/// <param name="code"></param>
 void OutputCode (string code)
 {
     File.WriteAllText(FilePath + "/../test.txt", code);
 }
 
+/// <summary>
+/// Append to the end of a code entry
+/// </summary>
+/// <param name="codeName"></param>
+/// <param name="code"></param>
 void Append (string codeName, string code)
 {
     Data.Code.ByName(codeName).AppendGML(code, Data);
 }
 
+/// <summary>
+/// Replace inside a code entry
+/// </summary>
+/// <param name="codeName"></param>
+/// <param name="text"></param>
+/// <param name="replacement"></param>
 void Replace (string codeName, string text, string replacement)
 {
     OutputCode(replacement);
     ReplaceTextInGML(codeName, text, replacement);
 }
 
+/// <summary>
+/// Place inside a code entry
+/// </summary>
+/// <param name="codeName"></param>
+/// <param name="preceding"></param>
+/// <param name="placement"></param>
 void Place (string codeName, string preceding, string placement)
 {
     OutputCode(placement);
     ReplaceTextInGML(codeName, preceding, $"{preceding}{placement}");
 }
 
+/// <summary>
+/// Create an object
+/// </summary>
+/// <param name="objectName"></param>
+/// <returns></returns>
 UndertaleGameObject CreateObject (string objectName)
 {
     var obj = new UndertaleGameObject();
@@ -30,6 +56,13 @@ UndertaleGameObject CreateObject (string objectName)
     return obj;
 }
 
+/// <summary>
+/// Create a function
+/// </summary>
+/// <param name="functionName"></param>
+/// <param name="code"></param>
+/// <param name="argCount"></param>
+/// <param name="isScript">If creating with a `function` call or as a script</param>
 void CreateFunction (string functionName, string code, int argCount = 0, bool isScript = false)
 {
     if (isScript)

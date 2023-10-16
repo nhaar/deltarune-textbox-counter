@@ -9,6 +9,9 @@ GetAllEmpty();
 GetAllValid();
 GetAllRemaining();
 
+/// <summary>
+/// Export all empty text ids
+/// </summary>
 void GetAllEmpty ()
 {
     foreach (Lang lang in Enum.GetValues(typeof(Lang)))
@@ -20,6 +23,11 @@ void GetAllEmpty ()
     }
 }
 
+/// <summary>
+/// Export all empty text ids for a language and chapter
+/// </summary>
+/// <param name="lang"></param>
+/// <param name="chapter"></param>
 void ExportEmpty (Lang lang, Chapter chapter)
 {
     var langName = GetLangName(lang);
@@ -40,6 +48,11 @@ void ExportEmpty (Lang lang, Chapter chapter)
     WriteIdListWithComments(Path.Combine(langFolder, $"empty_{chName}_{langName}.txt"), empty, langJSON);
 }
 
+/// <summary>
+/// Remove special control characters from a text
+/// </summary>
+/// <param name="text"></param>
+/// <returns></returns>
 string RemoveSpecialCharacters (string text)
 {
     var patterns = new[]
@@ -70,6 +83,9 @@ string RemoveSpecialCharacters (string text)
 // 2. Not be unused -> chapter based
 // 3. Not be empty in at least one language -> look at both languages
 
+/// <summary>
+/// Export all valid text ids
+/// </summary>
 void GetAllValid ()
 {
     foreach (Chapter chapter in Enum.GetValues(typeof(Chapter)))
@@ -80,6 +96,11 @@ void GetAllValid ()
     }
 }
 
+/// <summary>
+/// Export all valid text ids for a chapter
+/// </summary>
+/// <param name="chapterString"></param>
+/// <param name="langChapterString"></param>
 void OutputValid (string chapterString, string langChapterString)
 {
     var langJP = GetJsonAsDict(Path.Combine(langFolder, "lang_ja" + langChapterString + ".json"));
@@ -107,7 +128,9 @@ void OutputValid (string chapterString, string langChapterString)
     File.WriteAllLines(Path.Combine(langFolder, "valid_" + chapterString + ".txt"), validKeys);
 }
 
-
+/// <summary>
+/// Export all remaining text ids
+/// </summary>
 void GetAllRemaining ()
 {
     foreach (Chapter chapter in Enum.GetValues(typeof(Chapter)))
@@ -125,6 +148,10 @@ void GetAllRemaining ()
     }
 }
 
+/// <summary>
+/// Export all remaining text ids for a chapter
+/// </summary>
+/// <param name="chapter"></param>
 void GetRemaining (Chapter chapter)
 {
     var chapterString = GetChapterFileName(chapter);

@@ -1,10 +1,22 @@
 using System.Linq;
 
+/// <summary>
+/// Create a text id list and add comments to all of them
+/// </summary>
+/// <param name="path"></param>
+/// <param name="lines"></param>
+/// <param name="langs"></param>
 void WriteIdListWithComments (string path, List<string> lines, params Dictionary<string, string>[] langs)
 {
     File.WriteAllLines(path, lines.Select(l => AddCommentToId(l, langs)).ToList());
 }
 
+/// <summary>
+/// Add a comment to a text id
+/// </summary>
+/// <param name="textId"></param>
+/// <param name="langs"></param>
+/// <returns></returns>
 string AddCommentToId (string textId, params Dictionary<string, string>[] langs)
 {
     foreach (Dictionary<string, string> lang in langs)
@@ -17,6 +29,11 @@ string AddCommentToId (string textId, params Dictionary<string, string>[] langs)
     return textId;
 }
 
+/// <summary>
+/// Get a list of text ids from a text id file
+/// </summary>
+/// <param name="filePath"></param>
+/// <returns></returns>
 List<string> GetTextIdList (string filePath)
 {
     var lines = File.ReadAllLines(filePath).ToList();

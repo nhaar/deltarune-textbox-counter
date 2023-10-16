@@ -2,6 +2,11 @@ using System.Text.Json;
 using System.Linq;
 using System.Text.Encodings.Web;
 
+/// <summary>
+/// Export a dictionary as JSON
+/// </summary>
+/// <param name="json"></param>
+/// <param name="path"></param>
 void ExportJson (Dictionary<string, string> json, string path)
 {
     string jsonString = JsonSerializer.Serialize(json, new JsonSerializerOptions
@@ -40,6 +45,11 @@ Dictionary<string, string> GetJsonAsDict (string filePath)
     return json;
 }
 
+/// <summary>
+/// Get the keys that are exclusive to each json in a list of jsons
+/// </summary>
+/// <param name="jsons"></param>
+/// <returns></returns>
 HashSet<string>[] GetJsonExclusive(params Dictionary<string, string>[] jsons)
 {   
     List<HashSet<string>> sets = new();
