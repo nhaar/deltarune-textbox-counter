@@ -56,12 +56,13 @@ void CreateFunction (string functionName, string code, int argCount = 0, bool is
         {
             args.Add($"argument{i}");
         }
+
         ImportGMLString(
         functionName,
-        @$"function ({String.Join(", ", args)})
+        @$"function {functionName} ({String.Join(", ", args)})
         {{
             {code}
-        }})"
+        }}"
         );
     }
 }

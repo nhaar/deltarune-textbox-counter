@@ -1,3 +1,5 @@
+#load "..\Lib\JsonUtils.csx"
+
 using System.Runtime.Serialization;
 
 enum Lang
@@ -37,4 +39,13 @@ string GetChapterFileName (Chapter chapter)
         Chapter.Chapter1 => "ch1",
         Chapter.Chapter2 => "ch2",
     };
+}
+
+var langFolder = Path.Combine(Path.GetDirectoryName(FilePath), "lang");
+
+var langList = Path.Combine(Path.GetDirectoryName(ScriptPath), "LangList");
+
+Dictionary<string, string> GetDeltaruneLangFile (Chapter chapter, Lang lang)
+{
+    return GetJsonAsDict(Path.Combine(langFolder, $"lang_{GetLangName(lang)}{GetLangFileName(chapter)}.json"));
 }

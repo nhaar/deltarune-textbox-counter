@@ -1,15 +1,47 @@
 #load "..\Lib\DecompileContext.csx"
 #load "..\Lib\JsonUtils.csx"
-#load "LangFile.csx"
-#load "DeltarunePaths.csx"
+#load "..\Lib\TextIdList.csx"
+#load "DeltaruneUtils.csx"
+#load "..\Lib\Deprecated.csx"
 
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Linq;
 using System.Collections.Concurrent;
 using System.Collections.Specialized;
-using System.Text.Encodings.Web;
+using System.Threading.Tasks;
+using System.Linq;
+
+EnsureDataLoaded();
+await ExportCh2EnData();
+await ExportDeltaruneDeprecated();
+GetLanguageExclusive();
+
+async Task ExportDeltaruneDeprecated ()
+{
+    foreach (Chapter chapter in Enum.GetValues(typeof(Chapter)))
+    {
+        bool condition (string name)
+        {
+            switch (chapter)
+            {
+                case Chapter.Chapter1:
+                    return name.Contains("ch1");
+                case Chapter.Chapter2:
+                    return !name.Contains("ch1");
+                default:
+                    return false;
+            }
+        }
+        List<UndertaleCode> codeList = Data.Code.Where(code => condition(code.Name.Content) && code.ParentEntry == null).ToList();
+        var langEN = GetDeltaruneLangFile(chapter, Lang.EN);
+        var langJP = GetDeltaruneLangFile(chapter, Lang.JP);
+        var deprecated = await GetDeprecated(codeList.ToArray(), langEN, langJP);
+
+        File.WriteAllLines
+        (
+            Path.Combine(langFolder, $"deprecated_{GetChapterFileName(chapter)}.txt"),
+            deprecated.Select(textId => AddCommentToId(textId, langEN, langJP))
+        );
+    }
+}
 
 async Task ExportCh2EnData ()
 {
@@ -18,7 +50,7 @@ async Task ExportCh2EnData ()
     var langEN = new ConcurrentDictionary<string, string>();
 
     // just to order the language back to the original order
-    var output = new OrderedDictionary();
+    var output = new Dictionary<string, string>();
     // code entries with ch1 are the ones that are going to be present in the chapter 1 lang file
     // although there ARE chapter 1 strings in the chapter 2 lang file, they are not used
     // don't know why ParentEntry needs to be null, but that's how it was in the ExportAllCode.csx script
@@ -51,13 +83,7 @@ async Task ExportCh2EnData ()
         }
     }
 
-    string jsonString = JsonSerializer.Serialize(output, new JsonSerializerOptions
-    {
-        WriteIndented = true,
-        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-    });
-
-    ExportJson(output.ToDictionary(), Path.Combine(langFolder, "lang_en.json"));
+    ExportJson(output, Path.Combine(langFolder, "lang_en.json"));
 }
 
 
@@ -162,4 +188,34 @@ void SearchInCode (UndertaleCode code, Dictionary<string, string> langJP, Concur
     }
 
     IncrementProgressParallel();
+}
+
+void GetLanguageExclusive()
+{
+    foreach (Chapter chapter in Enum.GetValues(typeof(Chapter)))
+    {
+        GetChapterLanguageExclusive(chapter);
+    }
+}
+
+void GetChapterLanguageExclusive (Chapter chapter)
+{
+    var langs = new List<Dictionary<string, string>>();
+    var langTypes = (Lang[])Enum.GetValues(typeof(Lang));
+    foreach (Lang lang in langTypes)
+    {
+        langs.Add(GetDeltaruneLangFile(chapter, lang));
+    }
+
+    var sets = GetJsonExclusive(langs.ToArray());
+
+    for (int i = 0; i < langTypes.Length; i++)
+    {   
+        var langName = GetLangName(langTypes[i]);
+        File.WriteAllLines
+        (
+            Path.Combine(langFolder, $"only_{langName}_{GetChapterFileName(chapter)}.txt"),
+            sets[i].Select(textId => AddCommentToId(textId, langs.ToArray()))            
+        );
+    }
 }
