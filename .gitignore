@@ -4,3 +4,5 @@
 /src/Deltarune/*
 !/src/Deltarune/*.csx
 !/src/Deltarune/LangList
+/src/Undertale/*
+!/src/Undertale/*.csx
