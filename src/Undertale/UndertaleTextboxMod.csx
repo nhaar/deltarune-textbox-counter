@@ -1,9 +1,14 @@
-// This script setups the textbox tracker for UNDERTALE
-
 #load "..\Lib\TextSystem.csx"
 #load "..\Lib\GMLManip.csx"
 
+using System.Threading.Tasks;
 
+/// <summary>
+/// Build the UNDERTALE textbox mod
+/// </summary>
+/// <returns></returns>
+async Task Build ()
+{
 EnsureDataLoaded();
 
 // used to draw the total text
@@ -87,9 +92,7 @@ Replace
 "originalstring = scr_replace_buttons_pc(mystring[0])",
 "originalstring = clean_text_string(scr_replace_buttons_pc(mystring[0]));"
 );
-
-// remove for production!
-UseDebug();
+}
 
 /// <summary>
 /// Add debug mode to UNDERTALE

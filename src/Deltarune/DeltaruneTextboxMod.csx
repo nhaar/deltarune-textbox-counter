@@ -7,6 +7,8 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 
+async Task Build ()
+{
 EnsureDataLoaded();
 
 // very odd try catch hook that needs to be removed or modtool can't compile it
@@ -258,6 +260,7 @@ Replace
 "mystring = nstring[msgno]",
 "mystring = clean_text_string(nstring[msgno])"
 );
+}
 
 // remove for production
 UseDebug();
