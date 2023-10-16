@@ -1,6 +1,6 @@
 // This script updates the lang files with the latest changes
 
-#load "..\Lib\GetJson.csx"
+#load "..\Lib\JsonUtils.csx"
 #load "UndertaleUtils.csx"
 #load "..\Lib\AddComment.csx"
 #load "..\Lib\TextList.csx"

@@ -1,4 +1,4 @@
-#load "..\Lib\GetJson.csx"
+#load "..\Lib\JsonUtils.csx"
 #load "..\Lib\TextList.csx"
 #load "DeltarunePaths.csx"
 

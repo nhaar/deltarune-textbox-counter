@@ -1,9 +1,7 @@
 // This script setups the lang files for first time use (theoretically will not change over time)
 
 #load "..\Lib\DecompileContext.csx"
-#load "..\Lib\GetJson.csx"
-#load "..\Lib\ExportJson.csx"
-#load "..\Lib\JsonExclusive.csx"
+#load "..\Lib\JsonUtils.csx"
 #load "UndertaleUtils.csx"
 
 ExportLang();

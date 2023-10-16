@@ -1,5 +1,5 @@
 #load "..\Lib\DecompileContext.csx"
-#load "..\Lib\ExportJson.csx"
+#load "..\Lib\JsonUtils.csx"
 #load "LangFile.csx"
 #load "DeltarunePaths.csx"
 

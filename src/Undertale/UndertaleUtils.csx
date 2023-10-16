@@ -1,4 +1,4 @@
-#load "..\Lib\GetJson.csx"
+#load "..\Lib\JsonUtils.csx"
 
 var langFolder = Path.Combine(Path.GetDirectoryName(FilePath), "lang");
 var langList = Path.Combine(Path.GetDirectoryName(FilePath), "LangList");
