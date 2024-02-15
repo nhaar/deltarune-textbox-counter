@@ -122,7 +122,7 @@ void OutputValid (string chapterString, string langChapterString)
         )
         {
             var text = langEN.ContainsKey(key) ? langEN[key] : langJP[key];
-            validKeys.Add(key + " //" + text);
+            validKeys.Add(AddCommentToId(key, langEN, langJP));
         }
     }
     File.WriteAllLines(Path.Combine(langFolder, "valid_" + chapterString + ".txt"), validKeys);
@@ -137,14 +137,7 @@ void GetAllRemaining ()
     {
         var chapterString = GetChapterFileName(chapter);
         var langChapterString = GetLangFileName(chapter);
-        try
-        {
-            GetRemaining(chapter);
-        }
-        catch (System.Exception)
-        {
-            Console.WriteLine($"Error on {chapterString}");
-        }
+        GetRemaining(chapter);
     }
 }
 

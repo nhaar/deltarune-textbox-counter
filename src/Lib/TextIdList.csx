@@ -23,7 +23,7 @@ string AddCommentToId (string textId, params Dictionary<string, string>[] langs)
     {
         if (lang.ContainsKey(textId))
         {
-            return textId + " //" + lang[textId];
+            return textId + " //" + lang[textId].Replace("\n", "\\n");
         }
     }
     return textId;
